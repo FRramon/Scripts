@@ -47,250 +47,6 @@ importlib.reload(geom)
 
 # %% Functions
 
-# def get_spline_points(fname, step):
-
-#     with open(fname) as f:
-#         xml = f.read()
-#         root = ET.fromstring(
-#             re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
-
-#     # find the branch of the tree which contains control points
-
-#     branch = root[1][0][0][1]
-
-#     n_points = len(branch)
-#     n_s_points = n_points / step
-
-#     # if step !=1:
-#     #     s_points = np.zeros((int(np.ceil(n_s_points))+1, 3))
-#     # else:
-#     s_points = np.zeros((int(np.ceil(n_s_points)), 3))
-
-#     for i in range(0, n_points, step):
-#         k = i // step
-
-#         leaf = branch[i][0].attrib
-#         # Convert in meters - Fluent simulation done in meters
-#         s_points[k][0] = float(leaf.get("x")) * 0.001
-#         s_points[k][1] = float(leaf.get("y")) * 0.001
-#         s_points[k][2] = float(leaf.get("z")) * 0.001
-
-#     return s_points
-
-
-# def calculate_normal_vectors(points):
-#     """
-
-
-#     Parameters
-#     ----------
-#     points : (n,3) array of coordinates
-
-#     Returns
-#     -------
-#     vectors : (n-1,3) array of vectors : i --> i+1
-
-#     """
-#     n = points.shape[0]
-#     # n-1 vectors
-#     vectors = np.zeros((n - 1, 3))
-#     for i in range(n - 1):
-#         # substracting i vector from i+1
-#         vectors[i, 0] = points[i + 1, 0] - points[i, 0]
-#         vectors[i, 1] = points[i + 1, 1] - points[i, 1]
-#         vectors[i, 2] = points[i + 1, 2] - points[i, 2]
-
-#     return vectors
-
-
-# def calculate_norms(vectors):
-#     """
-
-
-#     Parameters
-#     ----------
-#     vectors : (n,3) array of vectors.
-
-#     Returns
-#     -------
-#     norms : (n,1) array of  euclidean norms of the vectors in input.
-
-#     """
-#     norms = np.zeros((vectors.shape[0], 1))
-#     for i in range(norms.shape[0]):
-#         norm_i = np.linalg.norm(vectors[i, :])
-#         norms[i] = norm_i
-#     return norms
-
-
-
-# def find_number_of_steps(points_vessel,radius):
-    
-    
-#     # Convert the radius into the equivalent of steps in the vessel coordinates array
-    
-#     vect_vessel=calculate_normal_vectors(points_vessel)
-#     norms_vessel=calculate_norms(vect_vessel)
-    
-#     # Compute the norms from 0 to i, i variating between 0 and len(vessel)
-#     L_dist_along=[np.sum(norms_vessel[0:i]) for i in range(norms_vessel.shape[0]) ]
-#     # Compare the previous norms and the radius
-#     L_compare_r=[abs(L_dist_along[i]-radius) for i in range(len(L_dist_along))]
-#     # Select the index of the minimum distance, which correspond to the indice to remove.
-#     step_vessel=L_compare_r.index(min(L_compare_r))
-  
-#     # return step_bas,step_lsc,step_rsc
-    
-#     return step_vessel
-
-# def get_center_radius(fname,pinfo,case):
-             
-#         os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
-        
-        
-#         fname='L_ICA_MCA.ctgr'
-#         with open(fname) as f:
-#             xml = f.read()
-#             root = ET.fromstring(
-#                 re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
-           
-#         # find the branch of the tree which contains control points
-        
-#         branch=root[1][0]
-#         n_points = len(branch)
-#         dsurfaces={}
-#         for j in range(1,n_points):
-#             s_points=np.zeros((len(branch[j][2]),3))
-#             for i in range(0,len(branch[j][2])):
-#                 leaf = branch[j][2][i].attrib
-            
-#                 s_points[i][0] = float(leaf.get('x')) * 0.001
-#                 s_points[i][1] = float(leaf.get('y')) * 0.001
-#                 s_points[i][2] = float(leaf.get('z')) * 0.001
-         
-#             dsurfaces['surface{}'.format(j)]=s_points
-        
-#         dcenter={}
-#         for j in range(1,len(dsurfaces)+1):
-           
-#             L=np.asarray(dsurfaces.get('surface{}'.format(j)))
-        
-#             center_x = np.mean(L[:,0])
-#             center_y = np.mean(L[:,1])
-#             center_z = np.mean(L[:,2])
-        
-#             center=np.array((center_x,center_y,center_z))
-        
-#             Lradius=[]
-#             for i in range(L.shape[0]):
-#                 Lradius.append(np.linalg.norm(center-L[i,:]))
-#             radius=max(Lradius)
-        
-#             dcenter['center{}'.format(j)]=center,radius
-        
-#         return dcenter
-
-
-# def get_center_radius_ulti(fname,pinfo,case):
-             
-#         os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
-        
-        
-#         fname='L_ICA_MCA.ctgr'
-#         with open(fname) as f:
-#             xml = f.read()
-#             root = ET.fromstring(
-#                 re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
-           
-#         # find the branch of the tree which contains control points
-        
-#         branch=root[1][0]
-#         n_points = len(branch)
-#         dsurfaces={}
-#         for j in range(1,n_points):
-#             s_points=np.zeros((len(branch[j][2]),3))
-#             for i in range(0,len(branch[j][2])):
-#                 leaf = branch[j][2][i].attrib
-            
-#                 s_points[i][0] = float(leaf.get('x')) * 0.001
-#                 s_points[i][1] = float(leaf.get('y')) * 0.001
-#                 s_points[i][2] = float(leaf.get('z')) * 0.001
-         
-#             dsurfaces['surface{}'.format(j)]=s_points
-        
-#         dcenter={}
-        
-           
-#         Lstart=np.asarray(dsurfaces.get('surface{}'.format(1)))
-#         Lend=np.asarray(dsurfaces.get('surface{}'.format(len(dsurfaces))))
-
-#         center_x1 = np.mean(Lstart[:,0])
-#         center_y1 = np.mean(Lstart[:,1])
-#         center_z1 = np.mean(Lstart[:,2])
-        
-#         center_x2 = np.mean(Lend[:,0])
-#         center_y2 = np.mean(Lend[:,1])
-#         center_z2 = np.mean(Lend[:,2])
-        
-#         center1=np.array((center_x1,center_y1,center_z1))
-#         center2=np.array((center_x2,center_y2,center_z2))
-
-        
-#         Lradius=[]
-#         for i in range(Lstart.shape[0]):
-#             Lradius.append(np.linalg.norm(center1-Lstart[i,:]))
-#         radius1=max(Lradius)
-        
-#         Lradius=[]
-#         for i in range(Lend.shape[0]):
-#             Lradius.append(np.linalg.norm(center2-Lend[i,:]))
-#         radius2=max(Lradius)
-        
-        
-#         dcenter['center{}'.format(1)]=center1,radius1
-#         dcenter['center{}'.format(2)]=center2,radius2
-
-        
-#         return dcenter
-
-
-    
-# def create_dpoint(pinfo, case, step):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str, example : 'pt2' , 'vsp7'
-#     case : str, 'baseline' or 'vasospasm'
-
-#     Returns
-#     -------
-#     dpoint_i : dict of all the control points for the vessels of the patient
-
-#     """
-
-#     if pinfo == 'pt2':
-#         folder = '_segmentation_no_vti'
-#     else:
-#         folder = '_segmentation'
-#     pathpath = 'N:/vasospasm/' + pinfo + '/' + case+'/1-geometry/' + \
-#         pinfo + '_' + case + folder + '/paths'
-
-#     os.chdir(pathpath)
-#     onlyfiles = []
-#     for file in glob.glob("*.pth"):
-#         onlyfiles.append(file)
-#     i = 0
-#     dpoint_i = {}
-#     for file in onlyfiles:
-
-#         filename = file[:-4]
-#         dpoint_i["points{}".format(
-#             i)] = filename, get_spline_points(file, step)
-#         i += 1
-#     return dpoint_i
-
 
 def division_ICA(pinfo, case, step):
     """
@@ -344,13 +100,7 @@ def division_ICA(pinfo, case, step):
             center_LACA = geom.get_center_radius_ulti(files, pinfo,case)
         if "R_ACA" in files:
             center_RACA =geom.get_center_radius_ulti(files, pinfo,case)
-        # if "L_ICA_MCA" in files:
-        #     center_LICAMCA = get_center_radius(files, pinfo,case)
-        # if "R_ICA_MCA" in files:
-        #     center_RICAMCA = get_center_radius(files, pinfo,case)
-    
-            
-
+     
     ltarget = [points_LACA[0], points_LACA[points_LACA.shape[0] - 1]]
     rtarget = [points_RACA[0], points_RACA[points_RACA.shape[0] - 1]]
     lnorms_end = []
@@ -978,7 +728,6 @@ def delete_old_arteries(dpoint_i):
 
         if "ICA_MCA" in dpoint_i.get("points{}".format(j))[0]:
 
-            # del dpoint_i["points{}".format(j)]
             I_supp.append(j)
 
         if (
@@ -986,7 +735,6 @@ def delete_old_arteries(dpoint_i):
             and "L_ACA" in dpoint_i.get("points{}".format(j))[0]
         ):
 
-            # del dpoint_i["points{}".format(j)]
             I_supp.append(j)
 
         if (
@@ -994,7 +742,6 @@ def delete_old_arteries(dpoint_i):
             and "R_ACA" in dpoint_i.get("points{}".format(j))[0]
         ):
 
-            # del dpoint_i["points{}".format(j)]
             I_supp.append(j)
 
         if (
@@ -1002,7 +749,6 @@ def delete_old_arteries(dpoint_i):
             and "L_PCA" in dpoint_i.get("points{}".format(j))[0]
         ):
 
-            # del dpoint_i["points{}".format(j)]
             I_supp.append(j)
 
         if (
@@ -1114,11 +860,10 @@ def _main_(pinfo, case, step):
     # Step 3# DELETE THE OLD VESSELS
 
     dpoints = add_divided_arteries(dpoints, dpoints_divI)
-
     dpoints = add_divided_arteries(dpoints, dpoints_divACA)
-
     dpoints = add_divided_arteries(dpoints, dpoints_divLPCA)
     dpoints = add_divided_arteries(dpoints, dpoints_divRP)
+    
 
     dpoints, indices = delete_old_arteries(dpoints)
 
