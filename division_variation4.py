@@ -21,6 +21,7 @@ import re
 import os
 from os import listdir
 from os.path import isfile, join
+import importlib
 
 
 import tecplot as tp
@@ -36,104 +37,111 @@ from skg import nsphere
 import pickle
 from tqdm import tqdm
 
+#%% Import intern modules
+
+os.chdir('N:/vasospasm/pressure_pytec_scripts/Scripts')
+
+import geometry_slice
+importlib.reload(geom)
+
 
 # %% Functions
 
-def get_spline_points(fname, step):
+# def get_spline_points(fname, step):
 
-    with open(fname) as f:
-        xml = f.read()
-        root = ET.fromstring(
-            re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
+#     with open(fname) as f:
+#         xml = f.read()
+#         root = ET.fromstring(
+#             re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
 
-    # find the branch of the tree which contains control points
+#     # find the branch of the tree which contains control points
 
-    branch = root[1][0][0][1]
+#     branch = root[1][0][0][1]
 
-    n_points = len(branch)
-    n_s_points = n_points / step
+#     n_points = len(branch)
+#     n_s_points = n_points / step
 
-    # if step !=1:
-    #     s_points = np.zeros((int(np.ceil(n_s_points))+1, 3))
-    # else:
-    s_points = np.zeros((int(np.ceil(n_s_points)), 3))
+#     # if step !=1:
+#     #     s_points = np.zeros((int(np.ceil(n_s_points))+1, 3))
+#     # else:
+#     s_points = np.zeros((int(np.ceil(n_s_points)), 3))
 
-    for i in range(0, n_points, step):
-        k = i // step
+#     for i in range(0, n_points, step):
+#         k = i // step
 
-        leaf = branch[i][0].attrib
-        # Convert in meters - Fluent simulation done in meters
-        s_points[k][0] = float(leaf.get("x")) * 0.001
-        s_points[k][1] = float(leaf.get("y")) * 0.001
-        s_points[k][2] = float(leaf.get("z")) * 0.001
+#         leaf = branch[i][0].attrib
+#         # Convert in meters - Fluent simulation done in meters
+#         s_points[k][0] = float(leaf.get("x")) * 0.001
+#         s_points[k][1] = float(leaf.get("y")) * 0.001
+#         s_points[k][2] = float(leaf.get("z")) * 0.001
 
-    return s_points
-
-
-def calculate_normal_vectors(points):
-    """
+#     return s_points
 
 
-    Parameters
-    ----------
-    points : (n,3) array of coordinates
-
-    Returns
-    -------
-    vectors : (n-1,3) array of vectors : i --> i+1
-
-    """
-    n = points.shape[0]
-    # n-1 vectors
-    vectors = np.zeros((n - 1, 3))
-    for i in range(n - 1):
-        # substracting i vector from i+1
-        vectors[i, 0] = points[i + 1, 0] - points[i, 0]
-        vectors[i, 1] = points[i + 1, 1] - points[i, 1]
-        vectors[i, 2] = points[i + 1, 2] - points[i, 2]
-
-    return vectors
+# def calculate_normal_vectors(points):
+#     """
 
 
-def calculate_norms(vectors):
-    """
+#     Parameters
+#     ----------
+#     points : (n,3) array of coordinates
+
+#     Returns
+#     -------
+#     vectors : (n-1,3) array of vectors : i --> i+1
+
+#     """
+#     n = points.shape[0]
+#     # n-1 vectors
+#     vectors = np.zeros((n - 1, 3))
+#     for i in range(n - 1):
+#         # substracting i vector from i+1
+#         vectors[i, 0] = points[i + 1, 0] - points[i, 0]
+#         vectors[i, 1] = points[i + 1, 1] - points[i, 1]
+#         vectors[i, 2] = points[i + 1, 2] - points[i, 2]
+
+#     return vectors
 
 
-    Parameters
-    ----------
-    vectors : (n,3) array of vectors.
-
-    Returns
-    -------
-    norms : (n,1) array of  euclidean norms of the vectors in input.
-
-    """
-    norms = np.zeros((vectors.shape[0], 1))
-    for i in range(norms.shape[0]):
-        norm_i = np.linalg.norm(vectors[i, :])
-        norms[i] = norm_i
-    return norms
+# def calculate_norms(vectors):
+#     """
 
 
+#     Parameters
+#     ----------
+#     vectors : (n,3) array of vectors.
 
-def find_number_of_steps(points_vessel,radius):
+#     Returns
+#     -------
+#     norms : (n,1) array of  euclidean norms of the vectors in input.
+
+#     """
+#     norms = np.zeros((vectors.shape[0], 1))
+#     for i in range(norms.shape[0]):
+#         norm_i = np.linalg.norm(vectors[i, :])
+#         norms[i] = norm_i
+#     return norms
+
+
+
+# def find_number_of_steps(points_vessel,radius):
     
     
-    # Convert the radius into the equivalent of steps in the vessel coordinates array
+#     # Convert the radius into the equivalent of steps in the vessel coordinates array
     
-    vect_vessel=calculate_normal_vectors(points_vessel)
-    norms_vessel=calculate_norms(vect_vessel)
+#     vect_vessel=calculate_normal_vectors(points_vessel)
+#     norms_vessel=calculate_norms(vect_vessel)
     
-    # Compute the norms from 0 to i, i variating between 0 and len(vessel)
-    L_dist_along=[np.sum(norms_vessel[0:i]) for i in range(norms_vessel.shape[0]) ]
-    # Compare the previous norms and the radius
-    L_compare_r=[abs(L_dist_along[i]-radius) for i in range(len(L_dist_along))]
-    # Select the index of the minimum distance, which correspond to the indice to remove.
-    step_vessel=L_compare_r.index(min(L_compare_r))
+#     # Compute the norms from 0 to i, i variating between 0 and len(vessel)
+#     L_dist_along=[np.sum(norms_vessel[0:i]) for i in range(norms_vessel.shape[0]) ]
+#     # Compare the previous norms and the radius
+#     L_compare_r=[abs(L_dist_along[i]-radius) for i in range(len(L_dist_along))]
+#     # Select the index of the minimum distance, which correspond to the indice to remove.
+#     step_vessel=L_compare_r.index(min(L_compare_r))
   
-    # return step_bas,step_lsc,step_rsc
+#     # return step_bas,step_lsc,step_rsc
     
-    return step_vessel
+#     return step_vessel
 
 # def get_center_radius(fname,pinfo,case):
              
@@ -183,105 +191,105 @@ def find_number_of_steps(points_vessel,radius):
 #         return dcenter
 
 
-def get_center_radius_ulti(fname,pinfo,case):
+# def get_center_radius_ulti(fname,pinfo,case):
              
-        os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
+#         os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
         
         
-        fname='L_ICA_MCA.ctgr'
-        with open(fname) as f:
-            xml = f.read()
-            root = ET.fromstring(
-                re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
+#         fname='L_ICA_MCA.ctgr'
+#         with open(fname) as f:
+#             xml = f.read()
+#             root = ET.fromstring(
+#                 re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
            
-        # find the branch of the tree which contains control points
+#         # find the branch of the tree which contains control points
         
-        branch=root[1][0]
-        n_points = len(branch)
-        dsurfaces={}
-        for j in range(1,n_points):
-            s_points=np.zeros((len(branch[j][2]),3))
-            for i in range(0,len(branch[j][2])):
-                leaf = branch[j][2][i].attrib
+#         branch=root[1][0]
+#         n_points = len(branch)
+#         dsurfaces={}
+#         for j in range(1,n_points):
+#             s_points=np.zeros((len(branch[j][2]),3))
+#             for i in range(0,len(branch[j][2])):
+#                 leaf = branch[j][2][i].attrib
             
-                s_points[i][0] = float(leaf.get('x')) * 0.001
-                s_points[i][1] = float(leaf.get('y')) * 0.001
-                s_points[i][2] = float(leaf.get('z')) * 0.001
+#                 s_points[i][0] = float(leaf.get('x')) * 0.001
+#                 s_points[i][1] = float(leaf.get('y')) * 0.001
+#                 s_points[i][2] = float(leaf.get('z')) * 0.001
          
-            dsurfaces['surface{}'.format(j)]=s_points
+#             dsurfaces['surface{}'.format(j)]=s_points
         
-        dcenter={}
+#         dcenter={}
         
            
-        Lstart=np.asarray(dsurfaces.get('surface{}'.format(1)))
-        Lend=np.asarray(dsurfaces.get('surface{}'.format(len(dsurfaces))))
+#         Lstart=np.asarray(dsurfaces.get('surface{}'.format(1)))
+#         Lend=np.asarray(dsurfaces.get('surface{}'.format(len(dsurfaces))))
 
-        center_x1 = np.mean(Lstart[:,0])
-        center_y1 = np.mean(Lstart[:,1])
-        center_z1 = np.mean(Lstart[:,2])
+#         center_x1 = np.mean(Lstart[:,0])
+#         center_y1 = np.mean(Lstart[:,1])
+#         center_z1 = np.mean(Lstart[:,2])
         
-        center_x2 = np.mean(Lend[:,0])
-        center_y2 = np.mean(Lend[:,1])
-        center_z2 = np.mean(Lend[:,2])
+#         center_x2 = np.mean(Lend[:,0])
+#         center_y2 = np.mean(Lend[:,1])
+#         center_z2 = np.mean(Lend[:,2])
         
-        center1=np.array((center_x1,center_y1,center_z1))
-        center2=np.array((center_x2,center_y2,center_z2))
-
-        
-        Lradius=[]
-        for i in range(Lstart.shape[0]):
-            Lradius.append(np.linalg.norm(center1-Lstart[i,:]))
-        radius1=max(Lradius)
-        
-        Lradius=[]
-        for i in range(Lend.shape[0]):
-            Lradius.append(np.linalg.norm(center2-Lend[i,:]))
-        radius2=max(Lradius)
-        
-        
-        dcenter['center{}'.format(1)]=center1,radius1
-        dcenter['center{}'.format(2)]=center2,radius2
+#         center1=np.array((center_x1,center_y1,center_z1))
+#         center2=np.array((center_x2,center_y2,center_z2))
 
         
-        return dcenter
+#         Lradius=[]
+#         for i in range(Lstart.shape[0]):
+#             Lradius.append(np.linalg.norm(center1-Lstart[i,:]))
+#         radius1=max(Lradius)
+        
+#         Lradius=[]
+#         for i in range(Lend.shape[0]):
+#             Lradius.append(np.linalg.norm(center2-Lend[i,:]))
+#         radius2=max(Lradius)
+        
+        
+#         dcenter['center{}'.format(1)]=center1,radius1
+#         dcenter['center{}'.format(2)]=center2,radius2
+
+        
+#         return dcenter
 
 
     
-def create_dpoint(pinfo, case, step):
-    """
+# def create_dpoint(pinfo, case, step):
+#     """
 
 
-    Parameters
-    ----------
-    pinfo : str, example : 'pt2' , 'vsp7'
-    case : str, 'baseline' or 'vasospasm'
+#     Parameters
+#     ----------
+#     pinfo : str, example : 'pt2' , 'vsp7'
+#     case : str, 'baseline' or 'vasospasm'
 
-    Returns
-    -------
-    dpoint_i : dict of all the control points for the vessels of the patient
+#     Returns
+#     -------
+#     dpoint_i : dict of all the control points for the vessels of the patient
 
-    """
+#     """
 
-    if pinfo == 'pt2':
-        folder = '_segmentation_no_vti'
-    else:
-        folder = '_segmentation'
-    pathpath = 'N:/vasospasm/' + pinfo + '/' + case+'/1-geometry/' + \
-        pinfo + '_' + case + folder + '/paths'
+#     if pinfo == 'pt2':
+#         folder = '_segmentation_no_vti'
+#     else:
+#         folder = '_segmentation'
+#     pathpath = 'N:/vasospasm/' + pinfo + '/' + case+'/1-geometry/' + \
+#         pinfo + '_' + case + folder + '/paths'
 
-    os.chdir(pathpath)
-    onlyfiles = []
-    for file in glob.glob("*.pth"):
-        onlyfiles.append(file)
-    i = 0
-    dpoint_i = {}
-    for file in onlyfiles:
+#     os.chdir(pathpath)
+#     onlyfiles = []
+#     for file in glob.glob("*.pth"):
+#         onlyfiles.append(file)
+#     i = 0
+#     dpoint_i = {}
+#     for file in onlyfiles:
 
-        filename = file[:-4]
-        dpoint_i["points{}".format(
-            i)] = filename, get_spline_points(file, step)
-        i += 1
-    return dpoint_i
+#         filename = file[:-4]
+#         dpoint_i["points{}".format(
+#             i)] = filename, get_spline_points(file, step)
+#         i += 1
+#     return dpoint_i
 
 
 def division_ICA(pinfo, case, step):
@@ -315,13 +323,13 @@ def division_ICA(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "L_ACA" in files:
-            points_LACA = get_spline_points(files, step)
+            points_LACA = geom.get_spline_points(files, step)
         if "R_ACA" in files:
-            points_RACA = get_spline_points(files, step)
+            points_RACA = geom.get_spline_points(files, step)
         if "L_ICA_MCA" in files:
-            points_LICAMCA = get_spline_points(files, step)
+            points_LICAMCA = geom.get_spline_points(files, step)
         if "R_ICA_MCA" in files:
-            points_RICAMCA = get_spline_points(files, step)
+            points_RICAMCA = geom.get_spline_points(files, step)
             
     # LOAD .ctgr files (center, radius) 
             
@@ -333,9 +341,9 @@ def division_ICA(pinfo, case, step):
         filesctgr.append(file)
     for files in filesctgr:
         if "L_ACA" in files:
-            center_LACA = get_center_radius_ulti(files, pinfo,case)
+            center_LACA = geom.get_center_radius_ulti(files, pinfo,case)
         if "R_ACA" in files:
-            center_RACA =get_center_radius_ulti(files, pinfo,case)
+            center_RACA =geom.get_center_radius_ulti(files, pinfo,case)
         # if "L_ICA_MCA" in files:
         #     center_LICAMCA = get_center_radius(files, pinfo,case)
         # if "R_ICA_MCA" in files:
@@ -374,11 +382,11 @@ def division_ICA(pinfo, case, step):
     #Definition of the indices to truncate (the equivalent of a radius of laca on each side)
 
     if limin <= len(lnorms_end):
-        indice_LICA=find_number_of_steps(points_LICA, center_LACA.get('center1')[1])
-        indice_LMCA=find_number_of_steps(points_LMCA, center_LACA.get('center1')[1])
+        indice_LICA=geom.find_number_of_steps(points_LICA, center_LACA.get('center1')[1])
+        indice_LMCA=geom.find_number_of_steps(points_LMCA, center_LACA.get('center1')[1])
     else:
-        indice_LICA=find_number_of_steps(points_LICA, center_LACA.get('center2')[1])
-        indice_LMCA=find_number_of_steps(points_LMCA, center_LACA.get('center2')[1])
+        indice_LICA=geom.find_number_of_steps(points_LICA, center_LACA.get('center2')[1])
+        indice_LMCA=geom.find_number_of_steps(points_LMCA, center_LACA.get('center2')[1])
 
     points_LICA=points_LICA[:points_LICA.shape[0]-indice_LICA]
     points_LMCA=points_LMCA[indice_LMCA:]
@@ -409,11 +417,11 @@ def division_ICA(pinfo, case, step):
     points_RMCA = points_RICAMCA[rimin_final:]
     
     if rimin <= len(rnorms_end):
-        indice_RICA=find_number_of_steps(points_RICA, center_RACA.get('center1')[1])
-        indice_RMCA=find_number_of_steps(points_RMCA, center_RACA.get('center1')[1])
+        indice_RICA=geom.find_number_of_steps(points_RICA, center_RACA.get('center1')[1])
+        indice_RMCA=geom.find_number_of_steps(points_RMCA, center_RACA.get('center1')[1])
     else:
-        indice_RICA=find_number_of_steps(points_RICA, center_RACA.get('center2')[1])
-        indice_RMCA=find_number_of_steps(points_RMCA, center_RACA.get('center2')[1])
+        indice_RICA=geom.find_number_of_steps(points_RICA, center_RACA.get('center2')[1])
+        indice_RMCA=geom.find_number_of_steps(points_RMCA, center_RACA.get('center2')[1])
 
     points_RICA=points_RICA[:points_RICA.shape[0]-indice_RICA]
     points_RMCA=points_RMCA[indice_RMCA:]
@@ -496,11 +504,11 @@ def division_RP(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if 'Pcom_PCA' in files:
-            points_vessel = get_spline_points(files, step)
+            points_vessel = geom.get_spline_points(files, step)
         if 'BAS_PCA' in files:
-            points_bas = get_spline_points(files, step)
+            points_bas = geom.get_spline_points(files, step)
         if other_side + '_Pcom' in files:
-            points_pcom = get_spline_points(files, step)
+            points_pcom = geom.get_spline_points(files, step)
             
     # LOAD .ctgr files (center, radius) 
              
@@ -512,7 +520,7 @@ def division_RP(pinfo, case, step):
         filesctgr.append(file)
     for files in filesctgr:
         if other_side + "_Pcom" in files:
-            center_pcom = get_center_radius_ulti(files, pinfo,case)
+            center_pcom = geom.get_center_radius_ulti(files, pinfo,case)
        
              
 
@@ -555,7 +563,7 @@ def division_RP(pinfo, case, step):
     points_1 = points_vessel[target:]
     points_2 = points_vessel[:target]
     
-    indice_p2=find_number_of_steps(points_2, center_pcom.get('center2')[1])
+    indice_p2=geom.find_number_of_steps(points_2, center_pcom.get('center2')[1])
     points_1=points_1[indice_p2:]
 
     fig = plt.figure(figsize=(7, 7))
@@ -615,11 +623,11 @@ def division_A(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "Acom" in files:
-            points_Acom = get_spline_points(files, step)
+            points_Acom = geom.get_spline_points(files, step)
         if "L_ACA" in files:
-            points_LACA = get_spline_points(files, step)
+            points_LACA = geom.get_spline_points(files, step)
         if "R_ACA" in files:
-            points_RACA = get_spline_points(files, step)
+            points_RACA = geom.get_spline_points(files, step)
 
     pathctgr='N:/vasospasm/'+ pinfo + '/' + case + '/1-geometry/' +  pinfo + '_' + case + '_segmentation_no_vti/Segmentations'
     os.chdir(pathctgr)
@@ -629,7 +637,7 @@ def division_A(pinfo, case, step):
         filesctgr.append(file)
     for files in filesctgr:
         if "Acom" in files:
-            center_Acom = get_center_radius_ulti(files, pinfo,case)
+            center_Acom = geom.get_center_radius_ulti(files, pinfo,case)
             
 
     target = [points_Acom[0], points_Acom[points_Acom.shape[0] - 1]]
@@ -657,11 +665,11 @@ def division_A(pinfo, case, step):
     # REMOVE THE RAIDUS OF THE INTESECTING VESSEL
     
     if limin <= len(Lnorms_end):
-        indice_LA1=find_number_of_steps(points_LA1, center_Acom.get('center1')[1])
-        indice_LA2=find_number_of_steps(points_LA2, center_Acom.get('center1')[1])
+        indice_LA1=geom.find_number_of_steps(points_LA1, center_Acom.get('center1')[1])
+        indice_LA2=geom.find_number_of_steps(points_LA2, center_Acom.get('center1')[1])
     else:
-        indice_LA1=find_number_of_steps(points_LA1, center_Acom.get('center2')[1])
-        indice_LA2=find_number_of_steps(points_LA2, center_Acom.get('center2')[1])
+        indice_LA1=geom.find_number_of_steps(points_LA1, center_Acom.get('center2')[1])
+        indice_LA2=geom.find_number_of_steps(points_LA2, center_Acom.get('center2')[1])
      
         
     points_LA1=points_LA1[:points_LA1.shape[0]-indice_LA1]
@@ -692,11 +700,11 @@ def division_A(pinfo, case, step):
     # REMOVE THE RADIUS OF THE INTERSECTING VESSEL 
     
     if rimin <= len(Rnorms_end):
-        indice_RA1=find_number_of_steps(points_RA1, center_Acom.get('center1')[1])
-        indice_RA2=find_number_of_steps(points_RA2, center_Acom.get('center1')[1])
+        indice_RA1=geom.find_number_of_steps(points_RA1, center_Acom.get('center1')[1])
+        indice_RA2=geom.find_number_of_steps(points_RA2, center_Acom.get('center1')[1])
     else:
-        indice_RA1=find_number_of_steps(points_RA1, center_Acom.get('center2')[1])
-        indice_RA2=find_number_of_steps(points_RA2, center_Acom.get('center2')[1])
+        indice_RA1=geom.find_number_of_steps(points_RA1, center_Acom.get('center2')[1])
+        indice_RA2=geom.find_number_of_steps(points_RA2, center_Acom.get('center2')[1])
      
         
     points_RA1=points_RA1[:points_RA1.shape[0]-indice_RA1]
@@ -766,11 +774,11 @@ def new_division_P_bas(pinfo, case, step):
         filesctgr.append(file)
     for files in filesctgr:
         if "BAS_PCA" in files:
-            center_BAS = get_center_radius_ulti(files, pinfo,case)
+            center_BAS = geom.get_center_radius_ulti(files, pinfo,case)
             side_bas = files[0]
             for subfiles in filesctgr:
                 if side_bas + "_Pcom" in subfiles:
-                    center_pcom=get_center_radius_ulti(subfiles,pinfo,case)
+                    center_pcom=geom.get_center_radius_ulti(subfiles,pinfo,case)
 
 
     if pinfo == 'pt2':
@@ -789,16 +797,16 @@ def new_division_P_bas(pinfo, case, step):
         # If one of the PCA is merged with the basilar : separation
 
         if "BAS_PCA" in files:
-            points_bas_pca = get_spline_points(files, step)
+            points_bas_pca = geom.get_spline_points(files, step)
             side_bas = files[0]
 
             for subfile in onlyfiles:
 
                 if side_bas + '_Pcom' in subfile:
-                    points_target = get_spline_points(subfile, step)
+                    points_target = geom.get_spline_points(subfile, step)
 
                 if 'Pcom_PCA' in subfile:
-                    points_otherside = get_spline_points(subfile, step)
+                    points_otherside = geom.get_spline_points(subfile, step)
 
             target = [points_target[0],
                       points_target[points_target.shape[0] - 1]]
@@ -830,12 +838,12 @@ def new_division_P_bas(pinfo, case, step):
             # REMOVE A RADIUS OF THE INTERSECTING VESSEL 
             
             if limin <= len(lnorms_end):
-                indice_basP1 = find_number_of_steps(points_basP1, center_pcom.get('center1')[1])
-                indice_P2 = find_number_of_steps(points_P2, center_pcom.get('center1')[1])
+                indice_basP1 = geom.find_number_of_steps(points_basP1, center_pcom.get('center1')[1])
+                indice_P2 = geom.find_number_of_steps(points_P2, center_pcom.get('center1')[1])
 
             else:
-                indice_basP1 = find_number_of_steps(points_basP1, center_pcom.get('center2')[1])
-                indice_P2 = find_number_of_steps(points_P2, center_pcom.get('center2')[1])
+                indice_basP1 = geom.find_number_of_steps(points_basP1, center_pcom.get('center2')[1])
+                indice_P2 = geom.find_number_of_steps(points_P2, center_pcom.get('center2')[1])
              
                 
             print(indice_P2)
@@ -888,7 +896,7 @@ def new_division_P_bas(pinfo, case, step):
             
             # REMOVE RADIUS OF BAS IN THE LEFT P1
             
-            indice_bas = find_number_of_steps(points_P1, center_BAS.get('center1')[1])
+            indice_bas = geom.find_number_of_steps(points_P1, center_BAS.get('center1')[1])
             
             points_P1=points_P1[indice_bas:]
 
@@ -1092,7 +1100,7 @@ def _main_(pinfo, case, step):
 
     
     print('patient info : ' ,pinfo + case )
-    dpoint_i = create_dpoint(pinfo, case, step)
+    dpoint_i = geom.create_dpoint(pinfo, case, step)
 
     # Step 2# CREATE NEW DIVIDED VESSELS
 
