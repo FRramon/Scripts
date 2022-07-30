@@ -360,10 +360,9 @@ def division_A(pinfo, case, step):
     dpoints_divided = {}
 
 
-    if pinfo == 'pt2':
-        folder = '_segmentation_no_vti'
-    else:
-        folder = '_segmentation'
+    
+    
+    folder = '_segmentation'
     pathpath = 'N:/vasospasm/' + pinfo + '/' + case+'/1-geometry/' + \
         pinfo + '_' + case + folder + '/paths'
 
@@ -379,7 +378,7 @@ def division_A(pinfo, case, step):
         if "R_ACA" in files:
             points_RACA = geom.get_spline_points(files, step)
 
-    pathctgr='N:/vasospasm/'+ pinfo + '/' + case + '/1-geometry/' +  pinfo + '_' + case + '_segmentation_no_vti/Segmentations'
+    pathctgr='N:/vasospasm/'+ pinfo + '/' + case + '/1-geometry/' +  pinfo + '_' + case + '_segmentation/Segmentations'
     os.chdir(pathctgr)
        
     filesctgr = []
@@ -434,7 +433,7 @@ def division_A(pinfo, case, step):
 
         Rnorms_start.append(lnorm_start)
         Rnorms_end.append(lnorm_end)
-    Rnorms_tot = Lnorms_end + Lnorms_start
+    Rnorms_tot = Rnorms_end + Rnorms_start
 
     rmini = np.min(Rnorms_tot)
     rimin = Rnorms_tot.index(rmini)
@@ -458,7 +457,7 @@ def division_A(pinfo, case, step):
      
         
     points_RA1=points_RA1[:points_RA1.shape[0]-indice_RA1]
-    points_RA2=points_RA2[indice_RA1:]
+    points_RA2=points_RA2[indice_RA2:]
     
     
 

@@ -383,7 +383,7 @@ def find_number_of_steps(points_vessel,radius):
 
 def get_center_radius(fname,pinfo,case):
              
-        os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
+        os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation/Segmentations')
         
         
         fname='L_ICA_MCA.ctgr'
@@ -433,7 +433,7 @@ def get_center_radius(fname,pinfo,case):
 
 def get_center_radius_ulti(fname,pinfo,case):
              
-        os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
+        os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation/Segmentations')
         
         
         fname='L_ICA_MCA.ctgr'
