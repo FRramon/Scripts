@@ -41,7 +41,7 @@ from tqdm import tqdm
 
 # %% Scripts as modules
 
-os.chdir('N:/vasospasm/pressure_pytec_scripts')
+os.chdir("N:/vasospasm/pressure_pytec_scripts")
 
 import geometry_slice as geom
 
@@ -85,8 +85,7 @@ def get_spline_points(fname, step):
 
     with open(fname) as f:
         xml = f.read()
-        root = ET.fromstring(
-            re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
+        root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
 
     # find the branch of the tree which contains control points
     branch = root[1][0][0][1]
@@ -165,9 +164,9 @@ def calculate_norms(vectors):
     return norms
 
 
-def get_distance_along(i_vessel, i_dat, dpressure,dvectors, dpoints):
-    #Change name function?
-    '''
+def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints):
+    # Change name function?
+    """
 
 
     Parameters
@@ -178,7 +177,7 @@ def get_distance_along(i_vessel, i_dat, dpressure,dvectors, dpoints):
     -------
     ddist : dictionnary of the distance along the vessels (use to plot the pressure later)
 
-    '''
+    """
     dnorms = {}
     ddist = {}
     dvectors = {}
@@ -187,29 +186,42 @@ def get_distance_along(i_vessel, i_dat, dpressure,dvectors, dpoints):
     # print(type(indices_dat[i_dat]))
     # print(dpressure)
     # print(dpressure.get('{}'.format(indices_dat[1])).get("pressure{}".format(i_vessel))[1][0])
-    
+
     # Inverse the order of the points if the pressure is not decreasing
-    
-    if dpressure.get('{}'.format(indices_dat[i_dat])).get(
-            "pressure{}".format(i_vessel))[1][0] == 1: # Check if it is to reverse (marked 1, 0 if not)
-        array_points = dpoints.get("points{}".format(i_vessel))[1][::-1] # reverse the array
+
+    if (
+        dpressure.get("{}".format(indices_dat[i_dat])).get(
+            "pressure{}".format(i_vessel)
+        )[1][0]
+        == 1
+    ):  # Check if it is to reverse (marked 1, 0 if not)
+        array_points = dpoints.get("points{}".format(i_vessel))[1][
+            ::-1
+        ]  # reverse the array
         dvectors["vectors{}".format(i_vessel)] = dpoints.get(
-            "points{}".format(i_vessel))[0], calculate_normal_vectors(array_points) # Compute new vectors
+            "points{}".format(i_vessel)
+        )[0], calculate_normal_vectors(
+            array_points
+        )  # Compute new vectors
     else:
         array_points = dpoints.get("points{}".format(i_vessel))[1]
         dvectors["vectors{}".format(i_vessel)] = dpoints.get(
-            "points{}".format(i_vessel))[0], calculate_normal_vectors(array_points)
+            "points{}".format(i_vessel)
+        )[0], calculate_normal_vectors(array_points)
 
-    dnorms['norms{}'.format(i_vessel)] = dvectors.get('vectors{}'.format(i_vessel))[
-        0], calculate_norms(dvectors.get('vectors{}'.format(i_vessel))[1])
+    dnorms["norms{}".format(i_vessel)] = dvectors.get("vectors{}".format(i_vessel))[
+        0
+    ], calculate_norms(dvectors.get("vectors{}".format(i_vessel))[1])
 
-    n_norms = dnorms.get('norms{}'.format(i_vessel))[1].shape[0]
+    n_norms = dnorms.get("norms{}".format(i_vessel))[1].shape[0]
 
     dist = np.zeros((n_norms + 1, 1))
     for j in range(1, n_norms + 1):
-        dist[j] = dnorms.get('norms{}'.format(i_vessel))[1][:j, :].sum()
-        ddist['dist{}'.format(i_vessel)] = dnorms.get(
-            'norms{}'.format(i_vessel))[0], dist
+        dist[j] = dnorms.get("norms{}".format(i_vessel))[1][:j, :].sum()
+        ddist["dist{}".format(i_vessel)] = (
+            dnorms.get("norms{}".format(i_vessel))[0],
+            dist,
+        )
     return ddist
 
 
@@ -238,7 +250,7 @@ def calculate_square_norm(vectors):
     norms = np.zeros((vectors.shape[0], 1))
     for i in range(norms.shape[0]):
         norm = np.linalg.norm(vectors[i, :])
-        norms[i] = norm ** 2
+        norms[i] = norm**2
     return norms
 
 
@@ -491,14 +503,24 @@ def manual_division(pinfo, case, vessel):
     """
     dpoints_divided = {}
 
-    #pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
+    # pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
 
-    if pinfo == 'pt2':
-        folder = '_segmentation_no_vti'
+    if pinfo == "pt2":
+        folder = "_segmentation_no_vti"
     else:
-        folder = '_segmentation'
-    pathpath = 'N:/vasospasm/' + pinfo + '/' + case+'/1-geometry/' + \
-        pinfo + '_' + case + folder + '/paths'
+        folder = "_segmentation"
+    pathpath = (
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/1-geometry/"
+        + pinfo
+        + "_"
+        + case
+        + folder
+        + "/paths"
+    )
 
     os.chdir(pathpath)
     onlyfiles = []
@@ -510,25 +532,25 @@ def manual_division(pinfo, case, vessel):
             points_vessel = get_spline_points(files, step)
 
     fig = plt.figure(figsize=(7, 7))
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection="3d")
     ax.grid(False)
     X, Y, Z = points_vessel[:, 0], points_vessel[:, 1], points_vessel[:, 2]
-    ax.plot(X, Y, Z, '--')
-    ax.plot(X, Y, Z, 'o')
+    ax.plot(X, Y, Z, "--")
+    ax.plot(X, Y, Z, "o")
     plt.title(vessel)
     i_point = 0
     for x, y, z in zip(X, Y, Z):
-        annotation = 'point {}'.format(i_point)
+        annotation = "point {}".format(i_point)
         ax.text(x, y, z, annotation)
         i_point += 1
     plt.show()
 
-    print('\n')
-    print('## Select separation point ##   ' + vessel[:-4] + '\n')
+    print("\n")
+    print("## Select separation point ##   " + vessel[:-4] + "\n")
     for i in range(len(points_vessel)):
-        print('   ', i, ' : point ', i)
+        print("   ", i, " : point ", i)
 
-    target = int(input('-->  '))
+    target = int(input("-->  "))
 
     points_1 = points_vessel[:target]
     points_2 = points_vessel[target:]
@@ -945,8 +967,16 @@ def get_list_files_dat(pinfo, case, num_cycle):
     indices = [l[13:-4] for l in onlyfiles]
 
     for i in range(len(indices)):
-        newpath = 'N:/vasospasm/pressure_pytec_scripts/plots_c/' + \
-            pinfo + '/' + case+'/cycle_' + num_cycle + '/plot_' + indices[i]
+        newpath = (
+            "N:/vasospasm/pressure_pytec_scripts/plots_c/"
+            + pinfo
+            + "/"
+            + case
+            + "/cycle_"
+            + num_cycle
+            + "/plot_"
+            + indices[i]
+        )
         if not os.path.exists(newpath):
             os.makedirs(newpath)
 
@@ -954,7 +984,7 @@ def get_list_files_dat(pinfo, case, num_cycle):
 
 
 def save_dict(dico, name):
-    '''
+    """
 
 
     Parameters
@@ -966,15 +996,14 @@ def save_dict(dico, name):
     -------
     None.
 
-    '''
+    """
 
-    with open(name + '.pkl', 'wb') as f:
+    with open(name + ".pkl", "wb") as f:
         pickle.dump(dico, f)
-        
 
 
 def load_dict(name):
-    '''
+    """
 
 
     Parameters
@@ -985,8 +1014,8 @@ def load_dict(name):
     -------
     b : the loaded dictionary
 
-    '''
-    with open(name + '.pkl', 'rb') as handle:
+    """
+    with open(name + ".pkl", "rb") as handle:
         b = pickle.load(handle)
     return b
 
@@ -994,12 +1023,9 @@ def load_dict(name):
 def get_variation(pinfo, case):
 
     dinfo = scipy.io.loadmat(
-        'N:/vasospasm/' +
-        pinfo +
-        '/' +
-        case+
-        '/3-computational/case_info.mat')
-    variation = int(dinfo.get('variation_input'))
+        "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/case_info.mat"
+    )
+    variation = int(dinfo.get("variation_input"))
 
     return variation
 
@@ -1011,35 +1037,35 @@ def change_name(name, Lfiles):
 
     x = name.lower()
     x = x[0] + x[2:]
-    #L=[z[13:] for z in Lfiles[1:]]
+    # L=[z[13:] for z in Lfiles[1:]]
 
-    if 'lsup_cer' in x:
-        name_f = 'lsc'
-    elif 'lsupcer' in x:
-        name_f = 'lsc'
-    elif 'rsup_cer' in x:
-        name_f = 'rsc'
-    elif 'rsupcer' in x:
-        name_f = 'rsc'
-    elif 'rsup_cereb_duplicate' in x:
-        name_f = 'rsc2'
-    elif 'rp2' in x:
-        name_f = 'rpca'
+    if "lsup_cer" in x:
+        name_f = "lsc"
+    elif "lsupcer" in x:
+        name_f = "lsc"
+    elif "rsup_cer" in x:
+        name_f = "rsc"
+    elif "rsupcer" in x:
+        name_f = "rsc"
+    elif "rsup_cereb_duplicate" in x:
+        name_f = "rsc2"
+    elif "rp2" in x:
+        name_f = "rpca"
 
-    elif 'ra2' in x:
-        name_f = 'raca'
+    elif "ra2" in x:
+        name_f = "raca"
 
-    elif 'lp2' in x:
-        name_f = 'lpca'
+    elif "lp2" in x:
+        name_f = "lpca"
 
-    elif 'la2' in x:
-        name_f = 'lpca'
+    elif "la2" in x:
+        name_f = "lpca"
 
-    elif 'rop' in x:
-        name_f = 'rop'
+    elif "rop" in x:
+        name_f = "rop"
 
-    elif 'lop' in x:
-        name_f = 'lop'
+    elif "lop" in x:
+        name_f = "lop"
 
     else:
         name_f = x
@@ -1050,7 +1076,7 @@ def change_name(name, Lfiles):
             iL = Lfiles.index(y)
             break
     if iL == 0:
-        iL = Lfiles.index(pinfo + '_' + case+'.walls')
+        iL = Lfiles.index(pinfo + "_" + case + ".walls")
 
     return Lfiles[iL]
 
@@ -1062,12 +1088,12 @@ def plot_other(data_file, vessel_name):
 
     name = change_name(vessel_name, zones)
 
-    name_walls = pinfo + '_' + case+'.walls'
+    name_walls = pinfo + "_" + case + ".walls"
     if name != name_walls:
 
-        cx = data_file.zone(name).values('X')[:]
-        cy = data_file.zone(name).values('Y')[:]
-        cz = data_file.zone(name).values('Z')[:]
+        cx = data_file.zone(name).values("X")[:]
+        cy = data_file.zone(name).values("Y")[:]
+        cz = data_file.zone(name).values("Z")[:]
         x_base = np.asarray(cx)
         y_base = np.asarray(cy)
         z_base = np.asarray(cz)
@@ -1092,11 +1118,16 @@ def plot_other(data_file, vessel_name):
             L.append(b)
 
         lmin = np.min(L)
-        #print('norme mini : ',lmin)
+        # print('norme mini : ',lmin)
         imin = L.index(lmin)
 
         xyz_frontier = np.array(
-            [coordinates_fluent[imin, 0], coordinates_fluent[imin, 1], coordinates_fluent[imin, 2]])
+            [
+                coordinates_fluent[imin, 0],
+                coordinates_fluent[imin, 1],
+                coordinates_fluent[imin, 2],
+            ]
+        )
         # ax.plot(coordinates_fluent[imin,0],coordinates_fluent[imin,1],coordinates_fluent[imin,2],'o')
 
         # plt.title(name)
@@ -1109,9 +1140,9 @@ def plot_other(data_file, vessel_name):
 
 def get_starting_indice(i_vessel, dpoints_i, dvectors_i, data_file_baseline):
 
-    array_points = dpoints_i.get('points{}'.format(i_vessel))
-    array_vectors = dvectors_i.get('vectors{}'.format(i_vessel))
-    name = dpoints_i.get('points{}'.format(i_vessel))[0]
+    array_points = dpoints_i.get("points{}".format(i_vessel))
+    array_vectors = dvectors_i.get("vectors{}".format(i_vessel))
+    name = dpoints_i.get("points{}".format(i_vessel))[0]
     xyz_frontier = plot_other(data_file_baseline, name)
 
     n_ = array_points[1].shape[0]
@@ -1139,25 +1170,26 @@ def get_starting_indice(i_vessel, dpoints_i, dvectors_i, data_file_baseline):
 def get_origin(dpoints_i, dvectors_i, i_vessel, data_file_baseline):
 
     starting_indice, lmin = get_starting_indice(
-        i_vessel, dpoints_i, dvectors_i, data_file_baseline)
+        i_vessel, dpoints_i, dvectors_i, data_file_baseline
+    )
 
-    array_points = dpoints_i.get('points{}'.format(i_vessel))
+    array_points = dpoints_i.get("points{}".format(i_vessel))
 
-    norms = calculate_norms(dvectors_i.get('vectors{}'.format(i_vessel))[1])
+    norms = calculate_norms(dvectors_i.get("vectors{}".format(i_vessel))[1])
     avg_norm = np.mean(norms)
-    name = dpoints_i.get('points{}'.format(i_vessel))[0]
+    name = dpoints_i.get("points{}".format(i_vessel))[0]
     ZERO = np.zeros((3, 1))
     ratio = avg_norm / lmin
-    if not np.array_equal(
-            plot_other(
-                data_file_baseline,
-                name),
-            ZERO) and ratio > 0.05 * step:
+    if (
+        not np.array_equal(plot_other(data_file_baseline, name), ZERO)
+        and ratio > 0.05 * step
+    ):
 
         n_ = array_points[1].shape[0]
 
         starting_indice, lmin = get_starting_indice(
-            i_vessel, dpoints_i, dvectors_i, data_file_baseline)
+            i_vessel, dpoints_i, dvectors_i, data_file_baseline
+        )
 
         # if starting_indice
         # A faire : definir si l'artere est concernee par la mise a jour par outlet ok
@@ -1189,7 +1221,7 @@ def get_origin(dpoints_i, dvectors_i, i_vessel, data_file_baseline):
 
 
 def data_coor(data_file):
-    '''
+    """
 
 
     Parameters
@@ -1200,15 +1232,15 @@ def data_coor(data_file):
     -------
     coordinates_fluent : coordinates of all the points or the fluent simulation
 
-    '''
+    """
 
-    name = pinfo + '_' + case + '.walls'
+    name = pinfo + "_" + case + ".walls"
 
-    #print('chosen file : ', name)
+    # print('chosen file : ', name)
 
-    cx = data_file.zone(name).values('X')[:]
-    cy = data_file.zone(name).values('Y')[:]
-    cz = data_file.zone(name).values('Z')[:]
+    cx = data_file.zone(name).values("X")[:]
+    cy = data_file.zone(name).values("Y")[:]
+    cz = data_file.zone(name).values("Z")[:]
     x_base = np.asarray(cx)
     y_base = np.asarray(cy)
     z_base = np.asarray(cz)
@@ -1219,7 +1251,7 @@ def data_coor(data_file):
 
 
 def find_closest(origin, name):
-    '''
+    """
 
 
     Parameters
@@ -1230,7 +1262,7 @@ def find_closest(origin, name):
     -------
     coordinates of the closest point to the control points, by minimazation with the euclidean distance
 
-    '''
+    """
 
     L = []
     coordinates_fluent = data_coor(data_file)
@@ -1263,9 +1295,12 @@ def find_slice(slices, origin):
     dict_slice = {}
     i = 0
     for s in slices:
-        dict_slice['{}'.format(i)] = s
-        (x, y, z) = (np.mean(s.values('X')[:]), np.mean(
-            s.values('Y')[:]), np.mean(s.values('Z')[:]))
+        dict_slice["{}".format(i)] = s
+        (x, y, z) = (
+            np.mean(s.values("X")[:]),
+            np.mean(s.values("Y")[:]),
+            np.mean(s.values("Z")[:]),
+        )
         L.append(np.array([x, y, z]))
         i += 1
 
@@ -1277,7 +1312,7 @@ def find_slice(slices, origin):
 
 
 def get_pressure(origin, normal, name):
-    '''
+    """
     Compute the pressure in a given slice.
     Assuming that every data that could be needed from fluent are loaded.
 
@@ -1290,7 +1325,7 @@ def get_pressure(origin, normal, name):
     Returns
     -------
     prssure : average pressure value in the slice
-    '''
+    """
 
     frame = tp.active_frame()
     plot = frame.plot()
@@ -1307,32 +1342,28 @@ def get_pressure(origin, normal, name):
         mode=ExtractMode.OneZonePerConnectedRegion,
         origin=origin_slice,
         normal=normal,
-        dataset=data_file)
+        dataset=data_file,
+    )
 
     dict_slice, n_iteration = find_slice(slices_0, origin_slice)
 
-    final_slice = dict_slice.get('{}'.format(n_iteration))
-    min_pressure = np.min(final_slice.values('Pressure')[:])
-    avg_pressure = np.mean(final_slice.values('Pressure')[:])
-    max_pressure = np.max(final_slice.values('Pressure')[:])
-    
-    
+    final_slice = dict_slice.get("{}".format(n_iteration))
+    min_pressure = np.min(final_slice.values("Pressure")[:])
+    avg_pressure = np.mean(final_slice.values("Pressure")[:])
+    max_pressure = np.max(final_slice.values("Pressure")[:])
+
     # Extract the 3D array of the points of the slice (test)
-    
-    if 'ICA' in name:
-        
-    
-        x_arr=final_slice.values('x')[:]
-        y_arr=final_slice.values('y')[:]
-        z_arr=final_slice.values('z')[:]
-   
-        array_slice=np.array((x_arr,y_arr,z_arr))
-    
-        
-    
-    
-    tp.macro.execute_command('$!RedrawAll')
-    #Attention mettre à jour le return
+
+    if "ICA" in name:
+
+        x_arr = final_slice.values("x")[:]
+        y_arr = final_slice.values("y")[:]
+        z_arr = final_slice.values("z")[:]
+
+        array_slice = np.array((x_arr, y_arr, z_arr))
+
+    tp.macro.execute_command("$!RedrawAll")
+    # Attention mettre à jour le return
     return min_pressure, avg_pressure, max_pressure, array_slice
 
 
@@ -1350,21 +1381,19 @@ def compute_along(i_vessel, dpoints, dvectors):
 
     """
 
-    name = dpoints.get('points{}'.format(i_vessel))[0]
-
+    name = dpoints.get("points{}".format(i_vessel))[0]
 
     # if 'ICA' in name:
-         
-     
-        # x_arr=final_slice.values('x')[:]
-        # y_arr=final_slice.values('y')[:]
-        # z_arr=final_slice.values('z')[:]
-    
-        # array_slice=np.array((x_arr,y_arr,z_arr))
-     
-        # center=geom.find_center(array_slice)
-        # radius=geom.find_radius(center,array_slice)
-     
+
+    # x_arr=final_slice.values('x')[:]
+    # y_arr=final_slice.values('y')[:]
+    # z_arr=final_slice.values('z')[:]
+
+    # array_slice=np.array((x_arr,y_arr,z_arr))
+
+    # center=geom.find_center(array_slice)
+    # radius=geom.find_radius(center,array_slice)
+
     Lavg, Lmin, Lmax = [], [], []
 
     # starting_indice=get_starting_indice(i_vessel)
@@ -1375,27 +1404,27 @@ def compute_along(i_vessel, dpoints, dvectors):
     # points = get_origin(i_vessel)
     # vectors=calculate_normal_vectors(points)
 
-    points = dpoints.get('points{}'.format(i_vessel))[1]
-    vectors = dvectors.get('vectors{}'.format(i_vessel))[1]
-    dslice={}
+    points = dpoints.get("points{}".format(i_vessel))[1]
+    vectors = dvectors.get("vectors{}".format(i_vessel))[1]
+    dslice = {}
     n_ = points.shape[0]
     if n_ > 2:
         print(
-            '### Compute on ',
-            dpoints.get(
-                'points{}'.format(i_vessel))[0],
-            ' ### Vessel ',
+            "### Compute on ",
+            dpoints.get("points{}".format(i_vessel))[0],
+            " ### Vessel ",
             i_vessel,
-            '/',
+            "/",
             len(dpoints),
-            '\n')
-        
+            "\n",
+        )
+
         fig = plt.figure(figsize=(7, 7))
-        ax = fig.add_subplot(111, projection='3d')
+        ax = fig.add_subplot(111, projection="3d")
         ax.grid()
-        
+
         for j in tqdm(range(len(points) - 1)):
-# If ICA -> take longer normal vectors to avoid the anomaly
+            # If ICA -> take longer normal vectors to avoid the anomaly
             # if 'ICA' in name:
             #     if j > 1 and j<len(points)-2 :
             #         origin = points[j, :]
@@ -1407,27 +1436,29 @@ def compute_along(i_vessel, dpoints, dvectors):
             origin = points[j, :]
             normal = vectors[j, :]
             min_pressure, avg_pressure, max_pressure, array_slice = get_pressure(
-                origin, normal, name)
-            print('   $$ Control point ', j,
-                  ' : Pressure = ', avg_pressure)
+                origin, normal, name
+            )
+            print("   $$ Control point ", j, " : Pressure = ", avg_pressure)
             Lmin.append(min_pressure)
             Lavg.append(avg_pressure)
             Lmax.append(max_pressure)
-            
-            Lpressure = np.array([Lmin, Lavg, Lmax])
-            
-            
 
-            ax.scatter(array_slice[0,:], array_slice[1,:],
-                       array_slice[2,:], c='b',linewidths=0.5)
-            ax.scatter(origin[0], origin[1],
-                        origin[2], c='k')
-           
-            dslice['point{}'.format(j)]=array_slice
+            Lpressure = np.array([Lmin, Lavg, Lmax])
+
+            ax.scatter(
+                array_slice[0, :],
+                array_slice[1, :],
+                array_slice[2, :],
+                c="b",
+                linewidths=0.5,
+            )
+            ax.scatter(origin[0], origin[1], origin[2], c="k")
+
+            dslice["point{}".format(j)] = array_slice
             ax.view_init(30, 30)
         ax.legend()
         plt.show()
-        print('\n')
+        print("\n")
 
     else:
         L = [0] * (len(points))
@@ -1435,11 +1466,11 @@ def compute_along(i_vessel, dpoints, dvectors):
 
     print(Lpressure)
 
-    return Lpressure,dslice
+    return Lpressure, dslice
 
 
 def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
-    '''
+    """
 
 
     Parameters
@@ -1451,44 +1482,42 @@ def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
     -------
     fig : plot of the pressure along the vessel, linear interpolation
 
-    '''
+    """
 
     Ldist = []
-    #starting_indice,xyz_frontier = get_starting_indice(i_vessel,dpoints,dvectors)
+    # starting_indice,xyz_frontier = get_starting_indice(i_vessel,dpoints,dvectors)
 
     # origin=get_origin(i_vessel)
     # vectors=calculate_normal_vectors(origin)
 
     # remplacer par dpoints et dvectors updated
 
-    origin = dpoints_u.get('points{}'.format(i_vessel))[1]
-    vectors = dvectors_u.get('vectors{}'.format(i_vessel))[1]
+    origin = dpoints_u.get("points{}".format(i_vessel))[1]
+    vectors = dvectors_u.get("vectors{}".format(i_vessel))[1]
 
     for i in range(0, dist.shape[0] - 1):
         Ldist.append(float((dist[i] + dist[i + 1]) / 2))
 
     fig = plt.figure(figsize=(14.4, 10.8))
 
-    #plt.plot(Ldist, Lpress[0,:], '--',label='Minimum')
-    #plt.plot(Ldist, Lpress[0,:], '^', label='Minimum')
+    # plt.plot(Ldist, Lpress[0,:], '--',label='Minimum')
+    # plt.plot(Ldist, Lpress[0,:], '^', label='Minimum')
 
-    plt.plot(Ldist, Lpress[1, :], '--')
-    plt.plot(Ldist, Lpress[1, :], 'o', label='Average')
+    plt.plot(Ldist, Lpress[1, :], "--")
+    plt.plot(Ldist, Lpress[1, :], "o", label="Average")
 
-    #plt.plot(Ldist, Lpress[2,:], '--',label='Maximum')
-    #plt.plot(Ldist, Lpress[2,:], 'v', label='Maximum')
+    # plt.plot(Ldist, Lpress[2,:], '--',label='Maximum')
+    # plt.plot(Ldist, Lpress[2,:], 'v', label='Maximum')
 
     plt.fill_between(Ldist, Lpress[0, :], Lpress[2, :], alpha=0.2)
 
     plt.grid()
-    plt.xlabel('distance along the vessel (m)', fontsize=18)
-    plt.ylabel('Pressure', fontsize=18)
+    plt.xlabel("distance along the vessel (m)", fontsize=18)
+    plt.ylabel("Pressure", fontsize=18)
     plt.title(
-        'Pressure along the ' +
-        ddist.get(
-            'dist{}'.format(i_vessel))[0],
-        fontsize=20)
-    plt.legend(loc='best')
+        "Pressure along the " + ddist.get("dist{}".format(i_vessel))[0], fontsize=20
+    )
+    plt.legend(loc="best")
 
     plt.show()
 
@@ -1496,7 +1525,7 @@ def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
 
 
 def save_pressure(i, dpoints, dvectors):
-    '''
+    """
 
 
     Parameters
@@ -1507,36 +1536,32 @@ def save_pressure(i, dpoints, dvectors):
     -------
     dpressure : dictionnary of the pressure in the vessel i.
 
-    '''
+    """
     dpressure = {}
     # dpressure['Informations']=pinfo,case,filename
-    Lpress,dslice=compute_along(
-        i,
-        dpoints,
-        dvectors)
-    
+    Lpress, dslice = compute_along(i, dpoints, dvectors)
+
     pressure_array = invert_array(np.array(Lpress))
-    name = dpoints.get('points{}'.format(i))[0]
-    dpressure['pressure{}'.format(i)] = name, pressure_array
-    
-    return dpressure,dslice
+    name = dpoints.get("points{}".format(i))[0]
+    dpressure["pressure{}".format(i)] = name, pressure_array
+
+    return dpressure, dslice
 
 
 def save_pressure_all(dpoints, dvectors):
-    '''
+    """
 
 
     Returns
     -------
     dpressure : dictionary of the pressure in all the vessels
 
-    '''
+    """
     dpressure = {}
     for i in range(len(dpoints)):
-        pressure_array = invert_array(
-            np.array(compute_along(i, dpoints, dvectors)[0]))
-        name = dpoints.get('points{}'.format(i))[0]
-        dpressure['pressure{}'.format(i)] = name, pressure_array
+        pressure_array = invert_array(np.array(compute_along(i, dpoints, dvectors)[0]))
+        name = dpoints.get("points{}".format(i))[0]
+        dpressure["pressure{}".format(i)] = name, pressure_array
 
     return dpressure
 
@@ -1544,36 +1569,41 @@ def save_pressure_all(dpoints, dvectors):
 def plot_on_time(dpressure, i_vessel, pinfo):
 
     onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
-    len_vessel = dpressure.get('{}'.format(indices[0])).get(
-        'pressure{}'.format(i_vessel))[1].shape[0]
-    name_vessel = dpressure.get(
-        '{}'.format(
-            indices[0])).get(
-        'pressure{}'.format(i_vessel))[0]
+    len_vessel = (
+        dpressure.get("{}".format(indices[0]))
+        .get("pressure{}".format(i_vessel))[1]
+        .shape[0]
+    )
+    name_vessel = dpressure.get("{}".format(indices[0])).get(
+        "pressure{}".format(i_vessel)
+    )[0]
     tabY = np.zeros((len_vessel))
     X = np.linspace(1, len(onlydat) - 1, len(onlydat) - 1)
 
     for i in range(len_vessel):
 
-        Y = [dpressure.get('{}'.format(indices[j])).get('pressure{}'.format(i_vessel))[
-            1][i, 1] for j in range(len(onlydat) - 1)]
+        Y = [
+            dpressure.get("{}".format(indices[j])).get("pressure{}".format(i_vessel))[
+                1
+            ][i, 1]
+            for j in range(len(onlydat) - 1)
+        ]
         # modify by taking the second line (avg)
         plt.plot(X, Y)
     plt.grid()
 
-    plt.xlabel('Time step')
-    plt.ylabel('Pressure')
-    plt.title(
-        'Pressure in each point in function of time in the ' +
-        name_vessel)
+    plt.xlabel("Time step")
+    plt.ylabel("Pressure")
+    plt.title("Pressure in each point in function of time in the " + name_vessel)
     plt.savefig(
-        'N:/vasospasm/pressure_pytec_scripts/plots_time/' +
-        pinfo +
-        '_' +
-        case +
-        '_' +
-        name_vessel +
-        '.png')
+        "N:/vasospasm/pressure_pytec_scripts/plots_time/"
+        + pinfo
+        + "_"
+        + case
+        + "_"
+        + name_vessel
+        + ".png"
+    )
     plt.show()
 
 
@@ -1582,26 +1612,40 @@ def plot_time_dispersion(dpressure, i_vessel, pinfo):
     Ldist = []
 
     onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
-    len_vessel = dpressure.get('{}'.format(indices[0])).get(
-        'pressure{}'.format(i_vessel))[1].shape[1]
-    name_vessel = dpressure.get(
-        '{}'.format(
-            indices[0])).get(
-        'pressure{}'.format(i_vessel))[0]
+    len_vessel = (
+        dpressure.get("{}".format(indices[0]))
+        .get("pressure{}".format(i_vessel))[1]
+        .shape[1]
+    )
+    name_vessel = dpressure.get("{}".format(indices[0])).get(
+        "pressure{}".format(i_vessel)
+    )[0]
 
-    dist = ddist.get('dist{}'.format(i_vessel))[1]
+    dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
         Ldist.append(float((dist[i] + dist[i + 1]) / 2))
 
     tab_pressure = np.zeros((len_vessel, 3))
 
     for i in range(len_vessel):
-        Lmin = [dpressure.get('{}'.format(indices[k])).get(
-            'pressure{}'.format(i_vessel))[1][0, i] for k in range(len(onlydat) - 1)]
-        Lmean = [dpressure.get('{}'.format(indices[k])).get(
-            'pressure{}'.format(i_vessel))[1][1, i] for k in range(len(onlydat) - 1)]
-        Lmax = [dpressure.get('{}'.format(indices[k])).get(
-            'pressure{}'.format(i_vessel))[1][2, i] for k in range(len(onlydat) - 1)]
+        Lmin = [
+            dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
+                1
+            ][0, i]
+            for k in range(len(onlydat) - 1)
+        ]
+        Lmean = [
+            dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
+                1
+            ][1, i]
+            for k in range(len(onlydat) - 1)
+        ]
+        Lmax = [
+            dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
+                1
+            ][2, i]
+            for k in range(len(onlydat) - 1)
+        ]
 
         tab_pressure[i, 0] = sum(Lmin) / len(Lmin)
         tab_pressure[i, 1] = sum(Lmean) / len(Lmean)
@@ -1609,29 +1653,33 @@ def plot_time_dispersion(dpressure, i_vessel, pinfo):
 
     fig = plt.figure(figsize=(14.4, 10.8))
 
-    plt.plot(Ldist, tab_pressure[:, 1], '--')
-    plt.plot(Ldist, tab_pressure[:, 1], 'o',
-             label='Average pressure over time')
-    plt.fill_between(Ldist,
-                     tab_pressure[:,
-                                  0],
-                     tab_pressure[:,
-                                  2],
-                     alpha=0.2,
-                     label='average enveloppe of min/max pressure over time')
+    plt.plot(Ldist, tab_pressure[:, 1], "--")
+    plt.plot(Ldist, tab_pressure[:, 1], "o", label="Average pressure over time")
+    plt.fill_between(
+        Ldist,
+        tab_pressure[:, 0],
+        tab_pressure[:, 2],
+        alpha=0.2,
+        label="average enveloppe of min/max pressure over time",
+    )
 
     plt.grid()
-    plt.xlabel('distance along the vessel (m)', fontsize=18)
-    plt.ylabel('Pressure', fontsize=18)
+    plt.xlabel("distance along the vessel (m)", fontsize=18)
+    plt.ylabel("Pressure", fontsize=18)
     plt.title(
-        'Pressure along the ' +
-        ddist.get(
-            'dist{}'.format(i_vessel))[0],
-        fontsize=20)
-    plt.legend(loc='best')
+        "Pressure along the " + ddist.get("dist{}".format(i_vessel))[0], fontsize=20
+    )
+    plt.legend(loc="best")
 
-    plt.savefig('N:/vasospasm/pressure_pytec_scripts/plots_avg/' +
-                pinfo + '_' + case +'_' + name_vessel + '.png')
+    plt.savefig(
+        "N:/vasospasm/pressure_pytec_scripts/plots_avg/"
+        + pinfo
+        + "_"
+        + case
+        + "_"
+        + name_vessel
+        + ".png"
+    )
     plt.show()
 
     return fig
@@ -1650,12 +1698,9 @@ def invert_array(arr):
 def get_Q_final(pinfo, case):
 
     dinfo = scipy.io.loadmat(
-        'N:/vasospasm/' +
-        pinfo +
-        '/' +
-        case+
-        '/3-computational/case_info.mat')
-    dqfinal = dinfo.get('Q_final')
+        "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/case_info.mat"
+    )
+    dqfinal = dinfo.get("Q_final")
     Q_arr = np.zeros((30, 11))
 
     for i in range(0, dqfinal.shape[0] // 2 - 3, 3):
@@ -1674,14 +1719,16 @@ def plot_R(dpressure, i_vessel, pinfo, case):
     Ldist = []
 
     onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
-    len_vessel = dpressure.get('{}'.format(indices[0])).get(
-        'pressure{}'.format(i_vessel))[1][1].shape[1]
-    name_vessel = dpressure.get(
-        '{}'.format(
-            indices[0])).get(
-        'pressure{}'.format(i_vessel))[0]
+    len_vessel = (
+        dpressure.get("{}".format(indices[0]))
+        .get("pressure{}".format(i_vessel))[1][1]
+        .shape[1]
+    )
+    name_vessel = dpressure.get("{}".format(indices[0])).get(
+        "pressure{}".format(i_vessel)
+    )[0]
 
-    dist = ddist.get('dist{}'.format(i_vessel))[1]
+    dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
         Ldist.append(float((dist[i] + dist[i + 1]) / 2))
 
@@ -1691,34 +1738,44 @@ def plot_R(dpressure, i_vessel, pinfo, case):
     len_cycle = 30
     for i in range(len_vessel):
         # print(dpressure.get('{}'.format(indices[0])).get('pressure{}'.format(i_vessel))[1][1][0,i])
-        Lmin = [dpressure.get('{}'.format(indices[k])).get(
-            'pressure{}'.format(i_vessel))[1][1][0, i] for k in range(len_cycle)]
-        Lmean = [dpressure.get('{}'.format(indices[k])).get(
-            'pressure{}'.format(i_vessel))[1][1][1, i] for k in range(len_cycle)]
-        Lmax = [dpressure.get('{}'.format(indices[k])).get(
-            'pressure{}'.format(i_vessel))[1][1][2, i] for k in range(len_cycle)]
+        Lmin = [
+            dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
+                1
+            ][1][0, i]
+            for k in range(len_cycle)
+        ]
+        Lmean = [
+            dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
+                1
+            ][1][1, i]
+            for k in range(len_cycle)
+        ]
+        Lmax = [
+            dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
+                1
+            ][1][2, i]
+            for k in range(len_cycle)
+        ]
 
         tab_pressure[i, 0] = sum(Lmin) / len(Lmin)
         tab_pressure[i, 1] = sum(Lmean) / len(Lmean)
         tab_pressure[i, 2] = sum(Lmax) / len(Lmax)
 
     tab_resistance = np.zeros((len_vessel, 3))
-    tab_resist_locale = np.zeros((len_vessel-1,3))
-    for i in range(1,len_vessel):
-        tab_resistance[i, :] = (tab_pressure[i, :] -
-                                tab_pressure[1, :]) / Qfinal
-    for i in range(len_vessel-1):
-        tab_resist_locale[i, :] = (tab_pressure[i+1, :] -
-                                tab_pressure[i, :]) / Qfinal
-
+    tab_resist_locale = np.zeros((len_vessel - 1, 3))
+    for i in range(1, len_vessel):
+        tab_resistance[i, :] = (tab_pressure[i, :] - tab_pressure[1, :]) / Qfinal
+    for i in range(len_vessel - 1):
+        tab_resist_locale[i, :] = (tab_pressure[i + 1, :] - tab_pressure[i, :]) / Qfinal
 
     fig = plt.figure(figsize=(14.4, 10.8))
 
-    plt.plot(Ldist[:-1],tab_resist_locale[:,1],label='local resistance')
+    plt.plot(Ldist[:-1], tab_resist_locale[:, 1], label="local resistance")
 
-    plt.plot(Ldist[1:], tab_resistance[1:, 1], '--')
-    plt.plot(Ldist[1:], tab_resistance[1:, 1], 'o',
-             label='Average resistance over time')
+    plt.plot(Ldist[1:], tab_resistance[1:, 1], "--")
+    plt.plot(
+        Ldist[1:], tab_resistance[1:, 1], "o", label="Average resistance over time"
+    )
     # plt.fill_between(Ldist,
     #                  tab_resistance[:,
     #                                 0],
@@ -1728,13 +1785,20 @@ def plot_R(dpressure, i_vessel, pinfo, case):
     #                  label='average enveloppe of min/max resistance over time')
 
     plt.grid()
-    plt.xlabel('distance along the vessel (m)', fontsize=18)
-    plt.ylabel('Resistance', fontsize=18)
-    plt.title('Resistance along the ' + name_vessel, fontsize=20)
-    plt.legend(loc='best')
+    plt.xlabel("distance along the vessel (m)", fontsize=18)
+    plt.ylabel("Resistance", fontsize=18)
+    plt.title("Resistance along the " + name_vessel, fontsize=20)
+    plt.legend(loc="best")
 
-    plt.savefig('N:/vasospasm/pressure_pytec_scripts/plots_avg/' +
-                pinfo + '_' + case +'_' + name_vessel + '.png')
+    plt.savefig(
+        "N:/vasospasm/pressure_pytec_scripts/plots_avg/"
+        + pinfo
+        + "_"
+        + case
+        + "_"
+        + name_vessel
+        + ".png"
+    )
     plt.show()
 
     return fig
@@ -1746,47 +1810,46 @@ def plot_R(dpressure, i_vessel, pinfo, case):
 def main():
     """
 
-The object of this script is to compute and plot the pressure along the vessels
-of the circle of Willis of a specific patient for certain points.
+    The object of this script is to compute and plot the pressure along the vessels
+    of the circle of Willis of a specific patient for certain points.
 
 
 
-This program
-    --> Step 1 : Extract files and coordinates, label names. All in a dictionnary
+    This program
+        --> Step 1 : Extract files and coordinates, label names. All in a dictionnary
 
-    --> Step 2: Operate a divison for ICA_MCA --> ICA & MCA, PCA --> P1 & P2 and ACA --> A1 & A2.
+        --> Step 2: Operate a divison for ICA_MCA --> ICA & MCA, PCA --> P1 & P2 and ACA --> A1 & A2.
 
-These division are made automatically if there is the right vessel to make the separation :
-    - ACA for the ICA_MCA
-    - Pcom for the PCA
-    - Acom for the ACA
-The separation is made finding the closest point of the unsparated vessel from
-the first/last point of the vessel used to do the separation, by minimazing the euclidian distances.
+    These division are made automatically if there is the right vessel to make the separation :
+        - ACA for the ICA_MCA
+        - Pcom for the PCA
+        - Acom for the ACA
+    The separation is made finding the closest point of the unsparated vessel from
+    the first/last point of the vessel used to do the separation, by minimazing the euclidian distances.
 
-If there is a vessel missing, the separation is made manually by the user, which enter the coordinates
-of the separation point.
+    If there is a vessel missing, the separation is made manually by the user, which enter the coordinates
+    of the separation point.
 
-    --> Step 3 : Add the divided ones in coordinates dictionnary, and remove the ICA_MCA/PCA/ACAs
+        --> Step 3 : Add the divided ones in coordinates dictionnary, and remove the ICA_MCA/PCA/ACAs
 
-    --> Step 4 : Compute the vectors dictionnary
+        --> Step 4 : Compute the vectors dictionnary
 
-This is just made by substracting the coordinates of the points terms to terms.
+    This is just made by substracting the coordinates of the points terms to terms.
 
-    --> Step 5 : Compute pressure with tecplot
+        --> Step 5 : Compute pressure with tecplot
 
-        Step 5.1 : Selecting the good case (patient, case, num_cycle, .dat file), and load data into Tecplot
-        Step 5.2 : Find the list of the closest points in fluent to the control points.
-        Step 5.3 : Make a slice for each control point and normal vector
-        Step 5.4 : Find the subslice that correspond to the vessel in which one is interested
-        Step 5.5 : Compute the average pressure in the subslice
-        Step 5.6 : Save the pressures in a dictionnary,containing every cycle/.dat file/ vessel.
-        Step 5.7 : change the order of the vessel if necessary to have a decreasing plot of pressure
-    --> Step 6 : Plot pressure in each vessel
+            Step 5.1 : Selecting the good case (patient, case, num_cycle, .dat file), and load data into Tecplot
+            Step 5.2 : Find the list of the closest points in fluent to the control points.
+            Step 5.3 : Make a slice for each control point and normal vector
+            Step 5.4 : Find the subslice that correspond to the vessel in which one is interested
+            Step 5.5 : Compute the average pressure in the subslice
+            Step 5.6 : Save the pressures in a dictionnary,containing every cycle/.dat file/ vessel.
+            Step 5.7 : change the order of the vessel if necessary to have a decreasing plot of pressure
+        --> Step 6 : Plot pressure in each vessel
 
-        Step 7 : extract flowrate, compute delta_P, and plot time average resistance along the segments.
+            Step 7 : extract flowrate, compute delta_P, and plot time average resistance along the segments.
 
-
-"""
+    """
 
     global pinfo
     global case
@@ -1796,12 +1859,12 @@ This is just made by substracting the coordinates of the points terms to terms.
     global data_file
     global ddist
     global step
-    print('$ Patient informations $\n')
+    print("$ Patient informations $\n")
     ptype = input("Patient origin? -- v : vsp## or p: pt## --\n")
-    if ptype == 'v':
-        ptype = 'vsp'
-    elif ptype == 'p':
-        ptype = 'pt'
+    if ptype == "v":
+        ptype = "vsp"
+    elif ptype == "p":
+        ptype = "pt"
     pnumber = input("Patient number?\n")
     pinfo = ptype + pnumber
     case = input("Case ? -- b for baseline of v for vasospasm\n")
@@ -1810,31 +1873,29 @@ This is just made by substracting the coordinates of the points terms to terms.
     elif case == "v":
         case = "vasospasm"
 
-    print('$ Select computing cases\n')
-    num_cycle = int(input('Which cycle ? 1,2,3 or 4\n'))
+    print("$ Select computing cases\n")
+    num_cycle = int(input("Which cycle ? 1,2,3 or 4\n"))
 
     onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle)
 
     for k in range(len(onlydat)):
-        print(k, ': ' + indices_dat[k][9:-3]+ ':' + indices_dat[k][11:] + ' s')
-    print('a : one period (30 time steps) \n')
-    select_file = input('which time step?\n')
+        print(k, ": " + indices_dat[k][9:-3] + ":" + indices_dat[k][11:] + " s")
+    print("a : one period (30 time steps) \n")
+    select_file = input("which time step?\n")
 
-    print('$ Step $\n')
-    step =int(input())
+    print("$ Step $\n")
+    step = int(input())
 
     # Load a different module of the control points extraction and sorting depending on the patient variation
 
     variation = get_variation(pinfo, case)
 
-    os.chdir('N:/vasospasm/pressure_pytec_scripts')
-    module_name = 'division_variation' + str(variation)
+    os.chdir("N:/vasospasm/pressure_pytec_scripts")
+    module_name = "division_variation" + str(variation)
     module = importlib.import_module(module_name)
-    
+
     importlib.reload(module)
     dpoints_u, dvectors_u = module._main_(pinfo, case, step)
-    
-    
 
     # return dpoints,dvectors
 
@@ -1896,16 +1957,16 @@ This is just made by substracting the coordinates of the points terms to terms.
     # print('spatial step (m) : ', definition, '\n')
 
     for k in range(len(dpoints_u)):
-        print(k, ' : ' + dpoints_u.get('points{}'.format(k))[0])
-    print('a : all vessels\n')
-    select_vessel = input('Compute on which vessel ?\n')
+        print(k, " : " + dpoints_u.get("points{}".format(k))[0])
+    print("a : all vessels\n")
+    select_vessel = input("Compute on which vessel ?\n")
 
     # Step 5#
 
     dpressure = {}
-    dpressure['Informations'] = pinfo, case
+    dpressure["Informations"] = pinfo, case
 
-    if select_file == 'a':
+    if select_file == "a":
         start = 0
         end = 30
     else:
@@ -1918,36 +1979,45 @@ This is just made by substracting the coordinates of the points terms to terms.
         filename = onlydat[i]
 
         print(
-            ' ############  Step 2 : Connection to Tecplot  ############ Time step : ',
+            " ############  Step 2 : Connection to Tecplot  ############ Time step : ",
             i,
-            '\n')
+            "\n",
+        )
         logging.basicConfig(level=logging.DEBUG)
 
-    # Run this script with "-c" to connect to Tecplot 360 on port 7600
-    # To enable connections in Tecplot 360, click on:
-    #   "Scripting" -> "PyTecplot Connections..." -> "Accept connections"
+        # Run this script with "-c" to connect to Tecplot 360 on port 7600
+        # To enable connections in Tecplot 360, click on:
+        #   "Scripting" -> "PyTecplot Connections..." -> "Accept connections"
 
         tp.session.connect()
         tp.new_layout()
         frame = tp.active_frame()
 
-        dir_file = 'N:/vasospasm/' + pinfo + '/' + case+ \
-            '/3-computational/hyak_submit/' + filename
+        dir_file = (
+            "N:/vasospasm/"
+            + pinfo
+            + "/"
+            + case
+            + "/3-computational/hyak_submit/"
+            + filename
+        )
 
         data_file = tp.data.load_fluent(
             case_filenames=[
-                'N:/vasospasm/' +
-                pinfo +
-                '/' +
-                case+
-                '/3-computational/hyak_submit/' +
-                pinfo +
-                '_' +
-                case+
-                '.cas'],
-            data_filenames=[dir_file])
+                "N:/vasospasm/"
+                + pinfo
+                + "/"
+                + case
+                + "/3-computational/hyak_submit/"
+                + pinfo
+                + "_"
+                + case
+                + ".cas"
+            ],
+            data_filenames=[dir_file],
+        )
 
-        tp.macro.execute_command('$!RedrawAll')
+        tp.macro.execute_command("$!RedrawAll")
         tp.active_frame().plot().rgb_coloring.red_variable_index = 3
         tp.active_frame().plot().rgb_coloring.green_variable_index = 3
         tp.active_frame().plot().rgb_coloring.blue_variable_index = 13
@@ -1960,7 +2030,7 @@ This is just made by substracting the coordinates of the points terms to terms.
         tp.active_frame().plot().contour(6).variable_index = 9
         tp.active_frame().plot().contour(7).variable_index = 10
         tp.active_frame().plot().show_contour = True
-        tp.macro.execute_command('$!RedrawAll')
+        tp.macro.execute_command("$!RedrawAll")
         tp.active_frame().plot(PlotType.Cartesian3D).show_slices = True
         slices = frame.plot().slices()
         slices.contour.show = True
@@ -1970,135 +2040,127 @@ This is just made by substracting the coordinates of the points terms to terms.
         slices = plot.slices(0)
         slices.show = True
 
-        print(' ############  Step 3 : Compute pressure  ############\n')
+        print(" ############  Step 3 : Compute pressure  ############\n")
 
-        if select_vessel == 'a':
-            dpressure['{}'.format(indices_dat[i])] = save_pressure_all(
-                dpoints_u, dvectors_u)
-            dname = "".join(['dpressure', '_', pinfo, '_', case])
-            save_dict(
-                dpressure,
-                'N:/vasospasm/pressure_pytec_scripts/' +
-                dname)
-           
+        if select_vessel == "a":
+            dpressure["{}".format(indices_dat[i])] = save_pressure_all(
+                dpoints_u, dvectors_u
+            )
+            dname = "".join(["dpressure", "_", pinfo, "_", case])
+            save_dict(dpressure, "N:/vasospasm/pressure_pytec_scripts/" + dname)
 
         else:
             i_ = int(select_vessel)
-            dpress,dslice=save_pressure(
-                i_, dpoints_u, dvectors_u)
-            dpressure['{}'.format(indices_dat[i])] = dpress
+            dpress, dslice = save_pressure(i_, dpoints_u, dvectors_u)
+            dpressure["{}".format(indices_dat[i])] = dpress
             save_dict(
                 dpressure,
-                'N:/vasospasm/pressure_pytec_scripts/dpressure' +
-                select_vessel)
-           
+                "N:/vasospasm/pressure_pytec_scripts/dpressure" + select_vessel,
+            )
 
-        if select_vessel == 'a':
+        if select_vessel == "a":
             ddist = {}
             for k in range(len(dpoints_u)):
-                ddist['{}'.format(k)] = get_distance_along(
-                    k, i, dpressure, dvectors_u, dpoints_u)
+                ddist["{}".format(k)] = get_distance_along(
+                    k, i, dpressure, dvectors_u, dpoints_u
+                )
 
         else:
             i_vessel = int(select_vessel)
-            ddist = get_distance_along(
-                i_vessel, i, dpressure, dvectors_u, dpoints_u)
+            ddist = get_distance_along(i_vessel, i, dpressure, dvectors_u, dpoints_u)
 
-        if select_vessel == 'a':
+        if select_vessel == "a":
             for k in range(len(dpoints_u)):
-                Lpress = dpressure.get(
-                    '{}'.format(
-                        indices_dat[i])).get(
-                    'pressure{}'.format(k))[1][1]
-                dist = ddist.get('{}'.format(k)).get('dist{}'.format(k))[1]
+                Lpress = dpressure.get("{}".format(indices_dat[i])).get(
+                    "pressure{}".format(k)
+                )[1][1]
+                dist = ddist.get("{}".format(k)).get("dist{}".format(k))[1]
                 fig = plot_linear(k, Lpress, dpoints_u, dvectors_u, dist)
                 fig.savefig(
-                    'N:/vasospasm/pressure_pytec_scripts/plots_c/' +
-                    pinfo +
-                    '/' +
-                    case +
-                    '/cycle_' +
-                    str(num_cycle) +
-                    '/plot_' +
-                    indices_dat[i] +
-                    '/' +
-                    'plot_' +
-                    dpoints_u.get(
-                        'points{}'.format(k))[0] +
-                    '.png')
-           
+                    "N:/vasospasm/pressure_pytec_scripts/plots_c/"
+                    + pinfo
+                    + "/"
+                    + case
+                    + "/cycle_"
+                    + str(num_cycle)
+                    + "/plot_"
+                    + indices_dat[i]
+                    + "/"
+                    + "plot_"
+                    + dpoints_u.get("points{}".format(k))[0]
+                    + ".png"
+                )
+
         else:
             i_vessel = int(select_vessel)
-            Lpress = dpressure.get(
-                '{}'.format(
-                    indices_dat[i])).get(
-                'pressure{}'.format(i_))[1][1]
-            dist = ddist.get('dist{}'.format(i_vessel))[1]
-            print('Lpress : ', Lpress)
-            print('dist :', dist)
+            Lpress = dpressure.get("{}".format(indices_dat[i])).get(
+                "pressure{}".format(i_)
+            )[1][1]
+            dist = ddist.get("dist{}".format(i_vessel))[1]
+            print("Lpress : ", Lpress)
+            print("dist :", dist)
             fig = plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist)
             fig.savefig(
-                'N:/vasospasm/pressure_pytec_scripts/plots_c/' +
-                pinfo +
-                '/' +
-                case +
-                '/cycle_' +
-                str(num_cycle) +
-                '/plot_' +
-                indices_dat[i] +
-                '/' +
-                'plot_' +
-                dpoints_u.get(
-                    'points{}'.format(i_))[0] +
-                '.png')
-    
-    #plot_R(dpressure,i_vessel,pinfo,case)
+                "N:/vasospasm/pressure_pytec_scripts/plots_c/"
+                + pinfo
+                + "/"
+                + case
+                + "/cycle_"
+                + str(num_cycle)
+                + "/plot_"
+                + indices_dat[i]
+                + "/"
+                + "plot_"
+                + dpoints_u.get("points{}".format(i_))[0]
+                + ".png"
+            )
+
+    # plot_R(dpressure,i_vessel,pinfo,case)
 
     return dpressure
 
 
-
 #%% Test new method slice ICA
 
-array_init=dpress_init.get('cycle2-1-02257').get('pressure8')[1][1][1]
-array_new=dpress_new.get('cycle2-1-02257').get('pressure8')[1][1][1]
-Lerr=[]
+array_init = dpress_init.get("cycle2-1-02257").get("pressure8")[1][1][1]
+array_new = dpress_new.get("cycle2-1-02257").get("pressure8")[1][1][1]
+Lerr = []
 for i in range(array_init.shape[0]):
-    err=100*abs(array_init[i]-array_new[i])/array_init[i]
+    err = 100 * abs(array_init[i] - array_new[i]) / array_init[i]
     Lerr.append(err)
-        
-X=np.linspace(0,array_init.shape[0]-1,array_init.shape[0])
-plt.plot(X,Lerr)
+
+X = np.linspace(0, array_init.shape[0] - 1, array_init.shape[0])
+plt.plot(X, Lerr)
 # plt.plot(X,array_init,label='original')
 # plt.plot(X,array_new,label='after method')
 plt.title("Space between the two methods")
 plt.ylabel("% of error")
-#plt.fill_between(X,array_init,array_new)
+# plt.fill_between(X,array_init,array_new)
 plt.show()
 
 
-MSE=0
+MSE = 0
 for i in range(array_init.shape[0]):
-    MSE+=(array_init[i]-array_new[i])
+    MSE += array_init[i] - array_new[i]
 
 #%% Test slices
 
 # Plot tecplot slices
 
 
-fig=plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-points=dpoints.get('points8')[1]
+fig = plt.figure()
+ax = fig.add_subplot(111, projection="3d")
+points = dpoints.get("points8")[1]
 
-X=points[47,0]
-Y=points[47,1]
-Z=points[47,2]
-ax.scatter(X,Y,Z)
+X = points[47, 0]
+Y = points[47, 1]
+Z = points[47, 2]
+ax.scatter(X, Y, Z)
 
-X=points[48,0]
-Y=points[48,1]
-Z=points[48,2]
-ax.scatter(X,Y,Z)
+X = points[48, 0]
+Y = points[48, 1]
+Z = points[48, 2]
+ax.scatter(X, Y, Z)
 
 # array_points=dslice.get('point{}'.format(len(dslice)-1))
 # X=array_points[0,:]
@@ -2106,175 +2168,186 @@ ax.scatter(X,Y,Z)
 # Z=array_points[2,:]
 
 # ax.plot_trisurf(X,Y,Z)
-i=47
+i = 47
 
-array_points=dslice.get('point{}'.format(i))
-X=array_points[0,:]
-Y=array_points[1,:]
-Z=array_points[2,:]
-ax.plot_trisurf(X,Y,Z,label='anomaly')
-    
-ax.view_init(30,-30)
+array_points = dslice.get("point{}".format(i))
+X = array_points[0, :]
+Y = array_points[1, :]
+Z = array_points[2, :]
+ax.plot_trisurf(X, Y, Z, label="anomaly")
+
+ax.view_init(30, -30)
 
 plt.show()
 
 
-#plot ctgr slices
-def get_surfaces(fname,pinfo,case):
-             
-        os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
-        
-        
-        fname='L_ICA_MCA.ctgr'
-        with open(fname) as f:
-            xml = f.read()
-            root = ET.fromstring(
-                re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
-           
-        # find the branch of the tree which contains control points
-        
-        branch=root[1][0]
-        n_points = len(branch)
-        dsurfaces={}
-        for j in range(1,n_points):
-            s_points=np.zeros((len(branch[j][2]),3))
-            for i in range(0,len(branch[j][2])):
-                leaf = branch[j][2][i].attrib
-            
-                s_points[i][0] = float(leaf.get('x')) * 0.001
-                s_points[i][1] = float(leaf.get('y')) * 0.001
-                s_points[i][2] = float(leaf.get('z')) * 0.001
-         
-            dsurfaces['surface{}'.format(j)]=s_points
-        
-        return dsurfaces
+# plot ctgr slices
+def get_surfaces(fname, pinfo, case):
+
+    os.chdir(
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/1-geometry/"
+        + pinfo
+        + "_"
+        + case
+        + "_segmentation_no_vti/Segmentations"
+    )
+
+    fname = "L_ICA_MCA.ctgr"
+    with open(fname) as f:
+        xml = f.read()
+        root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
+
+    # find the branch of the tree which contains control points
+
+    branch = root[1][0]
+    n_points = len(branch)
+    dsurfaces = {}
+    for j in range(1, n_points):
+        s_points = np.zeros((len(branch[j][2]), 3))
+        for i in range(0, len(branch[j][2])):
+            leaf = branch[j][2][i].attrib
+
+            s_points[i][0] = float(leaf.get("x")) * 0.001
+            s_points[i][1] = float(leaf.get("y")) * 0.001
+            s_points[i][2] = float(leaf.get("z")) * 0.001
+
+        dsurfaces["surface{}".format(j)] = s_points
+
+    return dsurfaces
 
 
+def find_radius(center, coord_center):
 
-def find_radius(center,coord_center):
-    
-    L=[]
+    L = []
     for i in range(coord_center.shape[0]):
-        L.append(np.linalg.norm(center-coord_center[:,i]))
-    radius=max(L)
-    
-    Lrad=[L.index(x) for x in L if x>0.9*radius]
-    coord_rad=np.asarray([coord_center[:,i] for i in Lrad ])
-        
+        L.append(np.linalg.norm(center - coord_center[:, i]))
+    radius = max(L)
+
+    Lrad = [L.index(x) for x in L if x > 0.9 * radius]
+    coord_rad = np.asarray([coord_center[:, i] for i in Lrad])
+
     # fig = plt.figure(figsize=(7, 7))
     # ax = fig.add_subplot(111, projection='3d')
     # ax.grid()
     # ax.scatter(coord_center[0,:], coord_center[1,:],
     #            coord_center[2,:] )
 
-
     # ax.plot(center[0],center[1],center[2],c='k',marker='x')
-    
-    Xrad=np.zeros((2,3))
-    Xrad[0]=center
-    Xrad[1]=coord_rad[1] # Plot the radius
+
+    Xrad = np.zeros((2, 3))
+    Xrad[0] = center
+    Xrad[1] = coord_rad[1]  # Plot the radius
     # ax.plot(Xrad[:,0],Xrad[:,1],Xrad[:,2])
-    
+
     # ax.view_init(30,0)
     # plt.show()
-    
+
     return radius
 
 
 def find_center(coordinates_circle):
-    
-    
 
-    x_mean = np.mean(coordinates_circle[:,0])
-    y_mean = np.mean(coordinates_circle[:,1])
-    z_mean = np.mean(coordinates_circle[:,2])
-    
-    
+    x_mean = np.mean(coordinates_circle[:, 0])
+    y_mean = np.mean(coordinates_circle[:, 1])
+    z_mean = np.mean(coordinates_circle[:, 2])
 
-    
     center = np.array([x_mean, y_mean, z_mean])
 
     return center
 
-def get_center_radius(fname,pinfo,case):
-             
-        os.chdir('N:/vasospasm/'+pinfo +'/'+ case +'/1-geometry/'+ pinfo + '_' + case + '_segmentation_no_vti/Segmentations')
-        
-        
-        fname='L_ICA_MCA.ctgr'
-        with open(fname) as f:
-            xml = f.read()
-            root = ET.fromstring(
-                re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
-           
-        # find the branch of the tree which contains control points
-        
-        branch=root[1][0]
-        n_points = len(branch)
-        dsurfaces={}
-        for j in range(1,n_points):
-            s_points=np.zeros((len(branch[j][2]),3))
-            for i in range(0,len(branch[j][2])):
-                leaf = branch[j][2][i].attrib
-            
-                s_points[i][0] = float(leaf.get('x')) * 0.001
-                s_points[i][1] = float(leaf.get('y')) * 0.001
-                s_points[i][2] = float(leaf.get('z')) * 0.001
-         
-            dsurfaces['surface{}'.format(j)]=s_points
-        
-        dcenter={}
-        for j in range(1,len(dsurfaces)+1):
-           
-            L=np.asarray(dsurfaces.get('surface{}'.format(j)))
-        
-            center_x = np.mean(L[:,0])
-            center_y = np.mean(L[:,1])
-            center_z = np.mean(L[:,2])
-        
-            center=np.array((center_x,center_y,center_z))
-        
-            Lradius=[]
-            for i in range(L.shape[0]):
-                Lradius.append(np.linalg.norm(center-L[i,:]))
-            radius=max(Lradius)
-        
-            dcenter['center{}'.format(j)]=center,radius
-        
-        return dcenter
 
-dsurfaces=get_surfaces('L_ICA_MCA','pt2','baseline')
-dcenter=get_center_radius('L_ICA_MCA','pt2','baseline')
-Lrad=[]
-for i in range(20,len(dsurfaces)-6):
-    array_points=dsurfaces.get('surface{}'.format(i))
-    center,radius=dcenter.get('center{}'.format(i))
+def get_center_radius(fname, pinfo, case):
+
+    os.chdir(
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/1-geometry/"
+        + pinfo
+        + "_"
+        + case
+        + "_segmentation_no_vti/Segmentations"
+    )
+
+    fname = "L_ICA_MCA.ctgr"
+    with open(fname) as f:
+        xml = f.read()
+        root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
+
+    # find the branch of the tree which contains control points
+
+    branch = root[1][0]
+    n_points = len(branch)
+    dsurfaces = {}
+    for j in range(1, n_points):
+        s_points = np.zeros((len(branch[j][2]), 3))
+        for i in range(0, len(branch[j][2])):
+            leaf = branch[j][2][i].attrib
+
+            s_points[i][0] = float(leaf.get("x")) * 0.001
+            s_points[i][1] = float(leaf.get("y")) * 0.001
+            s_points[i][2] = float(leaf.get("z")) * 0.001
+
+        dsurfaces["surface{}".format(j)] = s_points
+
+    dcenter = {}
+    for j in range(1, len(dsurfaces) + 1):
+
+        L = np.asarray(dsurfaces.get("surface{}".format(j)))
+
+        center_x = np.mean(L[:, 0])
+        center_y = np.mean(L[:, 1])
+        center_z = np.mean(L[:, 2])
+
+        center = np.array((center_x, center_y, center_z))
+
+        Lradius = []
+        for i in range(L.shape[0]):
+            Lradius.append(np.linalg.norm(center - L[i, :]))
+        radius = max(Lradius)
+
+        dcenter["center{}".format(j)] = center, radius
+
+    return dcenter
+
+
+dsurfaces = get_surfaces("L_ICA_MCA", "pt2", "baseline")
+dcenter = get_center_radius("L_ICA_MCA", "pt2", "baseline")
+Lrad = []
+for i in range(20, len(dsurfaces) - 6):
+    array_points = dsurfaces.get("surface{}".format(i))
+    center, radius = dcenter.get("center{}".format(i))
     Lrad.append(radius)
-    X=array_points[:,0]
-    Y=array_points[:,1]
-    Z=array_points[:,2]
+    X = array_points[:, 0]
+    Y = array_points[:, 1]
+    Z = array_points[:, 2]
 
-    #ax.plot_trisurf(X,Y,Z)
+    # ax.plot_trisurf(X,Y,Z)
 
-X_i=np.linspace(20,len(dsurfaces)-6,len(dsurfaces)-20-5)[:-1]
-plt.plot(X_i,Lrad,label='radius')
+X_i = np.linspace(20, len(dsurfaces) - 6, len(dsurfaces) - 20 - 5)[:-1]
+plt.plot(X_i, Lrad, label="radius")
 plt.ylabel("radius (m)")
 plt.title("plot of the radius in the curve of L_ICA | segmentation slices")
 plt.show()
 
-Lrad2=[]
-for i in range(46,55):
-    array_points=dslice.get('point{}'.format(i))
-    center=find_center(array_points)
-    radius=find_radius(center,array_points)
-    
-    Lrad2.append(radius)
-    X=array_points[:,0]
-    Y=array_points[:,1]
-    Z=array_points[:,2]
+Lrad2 = []
+for i in range(46, 55):
+    array_points = dslice.get("point{}".format(i))
+    center = find_center(array_points)
+    radius = find_radius(center, array_points)
 
-X_i=np.linspace(46,55,9)
-plt.plot(X_i,Lrad2,label='radius')
+    Lrad2.append(radius)
+    X = array_points[:, 0]
+    Y = array_points[:, 1]
+    Z = array_points[:, 2]
+
+X_i = np.linspace(46, 55, 9)
+plt.plot(X_i, Lrad2, label="radius")
 plt.ylabel("radius (m)")
 plt.title("plot of the radius in the curve of L_ICA | segmentation slices")
 plt.show()
@@ -2283,15 +2356,13 @@ plt.show()
 #%% Test outlet
 
 
+def plot_vessels_outlet(dpoints, i_vessel):
 
+    name = dpoints.get("points{}".format(i_vessel))[0]
+    pinfo = "pt7"
+    case = "baseline"
 
-def plot_vessels_outlet(dpoints,i_vessel):
-    
-    name=dpoints.get('points{}'.format(i_vessel))[0]
-    pinfo='pt7'
-    case='baseline'
-    
-    filename = pinfo + '_' + case + '.dat'
+    filename = pinfo + "_" + case + ".dat"
     logging.basicConfig(level=logging.DEBUG)
 
     # Run this script with "-c" to connect to Tecplot 360 on port 7600
@@ -2302,33 +2373,40 @@ def plot_vessels_outlet(dpoints,i_vessel):
     tp.new_layout()
     frame = tp.active_frame()
 
-    dir_file = 'N:/vasospasm/' + pinfo + '/' + case+ \
-        '/3-computational/hyak_submit/' + filename
+    dir_file = (
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/3-computational/hyak_submit/"
+        + filename
+    )
 
     data_file_baseline = tp.data.load_fluent(
         case_filenames=[
-            'N:/vasospasm/' +
-            pinfo +
-            '/' +
-            case+
-            '/3-computational/hyak_submit/' +
-            pinfo +
-            '_' +
-            case+
-            '.cas'],
-        data_filenames=[dir_file])
-    
-  
-    Lfiles=data_file_baseline.zone_names
-    new_name=change_name(name, Lfiles)
+            "N:/vasospasm/"
+            + pinfo
+            + "/"
+            + case
+            + "/3-computational/hyak_submit/"
+            + pinfo
+            + "_"
+            + case
+            + ".cas"
+        ],
+        data_filenames=[dir_file],
+    )
+
+    Lfiles = data_file_baseline.zone_names
+    new_name = change_name(name, Lfiles)
 
     print(Lfiles)
 
 
-pinfo='pt7'
-case='baseline'
+pinfo = "pt7"
+case = "baseline"
 
-filename = pinfo + '_' + case + '.dat'
+filename = pinfo + "_" + case + ".dat"
 logging.basicConfig(level=logging.DEBUG)
 
 # Run this script with "-c" to connect to Tecplot 360 on port 7600
@@ -2339,49 +2417,51 @@ tp.session.connect()
 tp.new_layout()
 frame = tp.active_frame()
 
-dir_file = 'N:/vasospasm/' + pinfo + '/' + case+ \
-    '/3-computational/hyak_submit/' + filename
+dir_file = (
+    "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/" + filename
+)
 
 data_file_baseline = tp.data.load_fluent(
     case_filenames=[
-        'N:/vasospasm/' +
-        pinfo +
-        '/' +
-        case+
-        '/3-computational/hyak_submit/' +
-        pinfo +
-        '_' +
-        case+
-        '.cas'],
-    data_filenames=[dir_file])
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/3-computational/hyak_submit/"
+        + pinfo
+        + "_"
+        + case
+        + ".cas"
+    ],
+    data_filenames=[dir_file],
+)
 
 
 # for i in range(len(dp)):
 #     plot_vessels_outlet(dp,i)
-name='pt7_baseline.lmca'
-points=dp.get('points{}'.format(11))[1]
-name_vessel=dp.get('points{}'.format(11))[0]
+name = "pt7_baseline.lmca"
+points = dp.get("points{}".format(11))[1]
+name_vessel = dp.get("points{}".format(11))[0]
 
 
-cx = data_file_baseline.zone(name).values('X')[:]
-cy = data_file_baseline.zone(name).values('Y')[:]
-cz = data_file_baseline.zone(name).values('Z')[:]
+cx = data_file_baseline.zone(name).values("X")[:]
+cy = data_file_baseline.zone(name).values("Y")[:]
+cz = data_file_baseline.zone(name).values("Z")[:]
 x_base = np.asarray(cx)
 y_base = np.asarray(cy)
 z_base = np.asarray(cz)
 
 coordinates_fluent = np.array([x_base, y_base, z_base]).T
-        
+
 fig = plt.figure(figsize=(7, 7))
-ax = fig.add_subplot(111, projection='3d')
+ax = fig.add_subplot(111, projection="3d")
 
 ax.grid(False)
 
 
-
-ax.scatter(x_base,y_base,z_base, label='outlet')
-ax.scatter(points[:, 0], points[:, 1],points[:, 2], label=name_vessel)
-ax.view_init(30,60)
+ax.scatter(x_base, y_base, z_base, label="outlet")
+ax.scatter(points[:, 0], points[:, 1], points[:, 2], label=name_vessel)
+ax.view_init(30, 60)
 ax.legend()
 
 plt.show()
@@ -2396,18 +2476,17 @@ from vtkmodules.vtkRenderingCore import (
     vtkPolyDataMapper,
     vtkRenderWindow,
     vtkRenderWindowInteractor,
-    vtkRenderer
+    vtkRenderer,
 )
 
 
 import pyvista as pv
 
 
-
-pinfo='pt2'
-case='baseline'
-filename='pt2_baseline_cycle2-1-02257.dat'
-step=1
+pinfo = "pt2"
+case = "baseline"
+filename = "pt2_baseline_cycle2-1-02257.dat"
+step = 1
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -2419,23 +2498,26 @@ tp.session.connect()
 tp.new_layout()
 frame = tp.active_frame()
 
-dir_file = 'N:/vasospasm/' + pinfo + '/' + case+ \
-        '/3-computational/hyak_submit/' + filename
+dir_file = (
+    "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/" + filename
+)
 
 data_file = tp.data.load_fluent(
-        case_filenames=[
-            'N:/vasospasm/' +
-            pinfo +
-            '/' +
-            case+
-            '/3-computational/hyak_submit/' +
-            pinfo +
-            '_' +
-            case+
-            '.cas'],
-        data_filenames=[dir_file])
+    case_filenames=[
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/3-computational/hyak_submit/"
+        + pinfo
+        + "_"
+        + case
+        + ".cas"
+    ],
+    data_filenames=[dir_file],
+)
 
-tp.macro.execute_command('$!RedrawAll')
+tp.macro.execute_command("$!RedrawAll")
 tp.active_frame().plot().rgb_coloring.red_variable_index = 3
 tp.active_frame().plot().rgb_coloring.green_variable_index = 3
 tp.active_frame().plot().rgb_coloring.blue_variable_index = 13
@@ -2448,7 +2530,7 @@ tp.active_frame().plot().contour(5).variable_index = 8
 tp.active_frame().plot().contour(6).variable_index = 9
 tp.active_frame().plot().contour(7).variable_index = 10
 tp.active_frame().plot().show_contour = True
-tp.macro.execute_command('$!RedrawAll')
+tp.macro.execute_command("$!RedrawAll")
 tp.active_frame().plot(PlotType.Cartesian3D).show_slices = True
 slices = frame.plot().slices()
 slices.contour.show = True
@@ -2458,30 +2540,34 @@ plot.show_slices = True
 slices = plot.slices(0)
 slices.show = True
 
-name='region'
+name = "region"
 
-cx = data_file.zone(name).values('X')[:]
-cy = data_file.zone(name).values('Y')[:]
-cz = data_file.zone(name).values('Z')[:]
+cx = data_file.zone(name).values("X")[:]
+cy = data_file.zone(name).values("Y")[:]
+cz = data_file.zone(name).values("Z")[:]
 x_base = np.asarray(cx)
 y_base = np.asarray(cy)
 z_base = np.asarray(cz)
 points = np.array([x_base, y_base, z_base]).T
 
-#Using pyvista polydata
+# Using pyvista polydata
 
 point_cloud = pv.PolyData(points)
 # surf = point_cloud.delaunay_2d(alpha=0.90,progress_bar=True)
 # surf.plot(cpos="xy", show_edges=True)
-# #Difining the surface 
+# #Difining the surface
 
 # surface = point_cloud.delaunay_2d(alpha=point_cloud.length/15,progress_bar=True).extract_surface().triangulate().clean()
 # point_cloud_numpy_array has shape (N, 3) where N is the number of points
 
 
-surface = point_cloud.delaunay_2d(progress_bar=True).extract_surface().triangulate().clean()
-areas = surface.compute_cell_sizes().cell_arrays['Area']
-final_surface = surface.extract_cells(areas < 8*1e-8).extract_surface().triangulate().clean()
+surface = (
+    point_cloud.delaunay_2d(progress_bar=True).extract_surface().triangulate().clean()
+)
+areas = surface.compute_cell_sizes().cell_arrays["Area"]
+final_surface = (
+    surface.extract_cells(areas < 8 * 1e-8).extract_surface().triangulate().clean()
+)
 
 final_surface.plot()
 
@@ -2492,17 +2578,17 @@ final_surface.plot()
 # shell = surface.extract_geometry()
 # shell.plot()
 
-#Defining the control points
+# Defining the control points
 
 # grid = pv.StructuredGrid(x_base, y_base, z_base)
 # grid.plot()
+
 
 def get_spline_points(fname, step):
 
     with open(fname) as f:
         xml = f.read()
-        root = ET.fromstring(
-            re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
+        root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
 
     # find the branch of the tree which contains control points
     branch = root[1][0][0][1]
@@ -2527,15 +2613,22 @@ def get_spline_points(fname, step):
     return s_points
 
 
-
-
-
-if pinfo == 'pt2':
-    folder = '_segmentation_no_vti'
+if pinfo == "pt2":
+    folder = "_segmentation_no_vti"
 else:
-    folder = '_segmentation'
-pathpath = 'N:/vasospasm/' + pinfo + '/' + case+'/1-geometry/' + \
-    pinfo + '_' + case + folder + '/paths'
+    folder = "_segmentation"
+pathpath = (
+    "N:/vasospasm/"
+    + pinfo
+    + "/"
+    + case
+    + "/1-geometry/"
+    + pinfo
+    + "_"
+    + case
+    + folder
+    + "/paths"
+)
 os.chdir(pathpath)
 onlyfiles = []
 for file in glob.glob("*.pth"):
@@ -2555,31 +2648,28 @@ for file in glob.glob("*.pth"):
 #     dpoints_updated['points{}'.format(i)]=pts
 #     i+=1
 # # cloud.plot()
-dpoints_updated_arrays={}
+dpoints_updated_arrays = {}
 for i in range(len(dpoints_updated)):
-    source=dpoints_updated.get('points{}'.format(i))
+    source = dpoints_updated.get("points{}".format(i))
     n = source.number_of_cells
-    array_points= np.zeros((n,3))
+    array_points = np.zeros((n, 3))
     for j in range(n):
-        array_points[j]=source.cell_points(j)
-    dpoints_updated_arrays['points{}'.format(i)]=array_points
+        array_points[j] = source.cell_points(j)
+    dpoints_updated_arrays["points{}".format(i)] = array_points
 
 
-fig=plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+fig = plt.figure()
+ax = fig.add_subplot(111, projection="3d")
 
-#for i in range(len(dpoints_updated_arrays)):
-vessel_points=dpoints_updated_arrays.get('points{}'.format(9))
-x=vessel_points[:,0]
-y=vessel_points[:,1]
-z=vessel_points[:,2]
-    
-ax.scatter(x,y,z)
-    
+# for i in range(len(dpoints_updated_arrays)):
+vessel_points = dpoints_updated_arrays.get("points{}".format(9))
+x = vessel_points[:, 0]
+y = vessel_points[:, 1]
+z = vessel_points[:, 2]
+
+ax.scatter(x, y, z)
+
 plt.show()
-    
-
-
 
 
 # surf=cloud.delaunay_2d()
