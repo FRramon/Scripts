@@ -45,7 +45,7 @@ from tqdm import tqdm
 
 os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
 
-import geometry_slice
+import geometry_slice as geom
 
 importlib.reload(geom)
 

@@ -37,107 +37,16 @@ from skg import nsphere
 import pickle
 from tqdm import tqdm
 
+#%% Import intern module
+
+os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
+
+import geometry_slice
+
+importlib.reload(geom)
+
 
 # %% Functions
-
-
-def get_spline_points(fname, step):
-
-    with open(fname) as f:
-        xml = f.read()
-        root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
-
-    # find the branch of the tree which contains control points
-    branch = root[1][0][0][1]
-
-    n_points = len(branch)
-    n_s_points = n_points / step
-
-    # if step !=1:
-    #     s_points = np.zeros((int(np.ceil(n_s_points))+1, 3))
-    # else:
-    s_points = np.zeros((int(np.ceil(n_s_points)), 3))
-
-    for i in range(0, n_points, step):
-        k = i // step
-
-        leaf = branch[i][0].attrib
-        # Convert in meters - Fluent simulation done in meters
-        s_points[k][0] = float(leaf.get("x")) * 0.001
-        s_points[k][1] = float(leaf.get("y")) * 0.001
-        s_points[k][2] = float(leaf.get("z")) * 0.001
-
-    return s_points
-
-
-def calculate_normal_vectors(points):
-    """
-
-
-    Parameters
-    ----------
-    points : (n,3) array of coordinates
-
-    Returns
-    -------
-    vectors : (n-1,3) array of vectors : i --> i+1
-
-    """
-    n = points.shape[0]
-    # n-1 vectors
-    vectors = np.zeros((n - 1, 3))
-    for i in range(n - 1):
-        # substracting i vector from i+1
-        vectors[i, 0] = points[i + 1, 0] - points[i, 0]
-        vectors[i, 1] = points[i + 1, 1] - points[i, 1]
-        vectors[i, 2] = points[i + 1, 2] - points[i, 2]
-
-    return vectors
-
-
-def create_dpoint(pinfo, case, step):
-    """
-
-
-    Parameters
-    ----------
-    pinfo : str, example : 'pt2' , 'vsp7'
-    case : str, 'baseline' or 'vasospasm'
-
-    Returns
-    -------
-    dpoint_i : dict of all the control points for the vessels of the patient
-
-    """
-
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
-    pathpath = (
-        "N:/vasospasm/"
-        + pinfo
-        + "/"
-        + case
-        + "/1-geometry/"
-        + pinfo
-        + "_"
-        + case
-        + folder
-        + "/paths"
-    )
-
-    os.chdir(pathpath)
-    onlyfiles = []
-    for file in glob.glob("*.pth"):
-        onlyfiles.append(file)
-    i = 0
-    dpoint_i = {}
-    for file in onlyfiles:
-        filename = file[:-4]
-        dpoint_i["points{}".format(i)] = filename, get_spline_points(file, step)
-        i += 1
-    return dpoint_i
 
 
 def division_ICA(pinfo, case, step):
@@ -272,28 +181,6 @@ def division_ICA(pinfo, case, step):
         k += 1
 
     return dpoints_divided
-
-
-# def get_method_div_A(pinfo, case,step):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str, example : 'pt2' , 'vsp7'
-#     case : str, 'baseline' or 'vasospasm'
-
-#     Returns
-#     -------
-#     str : 'auto' if there is an Acom, 'manual' if not
-
-#     """
-#     dpoints = create_dpoint(pinfo, case,step)
-
-#     for i in range(len(dpoints)):
-#         if "Acom" in dpoints.get("points{}".format(i))[0]:
-#             return "auto"
-#     return "manual"
 
 
 # def division_P_2(pinfo, case, vessel):
@@ -593,30 +480,6 @@ def manual_division(pinfo, case, vessel, step):
     return dpoints_divided
 
 
-# def get_method_div_P(pinfo, case):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str, example : 'pt2' , 'vsp7'
-#     case : str, 'baseline' or 'vasospasm'
-
-#     Returns
-#     -------
-# L : list of two str, being 'auto' if there is a left/right Pcom,
-# 'manual' if not
-
-#     """
-
-#     dpoints = create_dpoint(pinfo, case)
-#     L = ["manual", "manual"]
-#     for i in range(len(dpoints)):
-#         if "L_Pcom" in dpoints.get("points{}".format(i))[0]:
-#             L[0] = "auto"
-#         if "R_Pcom" in dpoints.get("points{}".format(i))[0]:
-#             L[1] = "auto"
-#     return L
 
 
 def division_A(pinfo, case, step):
@@ -955,49 +818,6 @@ def division_P_bas(pinfo, case, step):
 
             return dpoints_divided
 
-        # else :
-
-        #     for subfile in onlyfiles :
-        #         if "Acom" in subfile:
-        #             points_Acom = get_spline_points(subfile,step)
-        #         if "L_PCA" in subfile:
-        #             points_LACA = get_spline_points(subfile,step)
-        #         if "R_PCA" in subfile:
-        #             points_RACA = get_spline_points(subfile,step)
-
-        #     ltarget = points_Acom[points_Acom.shape[0] - 1]
-        #     rtarget = points_Acom[0]
-        #     lnorms = []
-        #     for i in range(points_LACA.shape[0]):
-        #         lnorm = np.linalg.norm(ltarget - points_LACA[i])
-        #         lnorms.append(lnorm)
-        #     lmini = np.min(lnorms)
-        #     limin = lnorms.index(lmini)
-        #     points_LA1 = points_LACA[:limin]
-        #     points_LA2 = points_LACA[limin:]
-        #     rnorms = []
-        #     for i in range(points_RACA.shape[0]):
-        #         rnorm = np.linalg.norm(rtarget - points_RACA[i])
-        #         rnorms.append(rnorm)
-        #     rmini = np.min(rnorms)
-        #     imin = rnorms.index(rmini)
-        #     points_RA1 = points_RACA[:imin]
-        #     points_RA2 = points_RACA[imin:]
-        #     dpoints_divided = {}
-        #     k = 0
-        #     if points_LA1.shape[0] != 0:
-        #         dpoints_divided["points{}".format(k)] = "L_P1", points_LA1
-        #         k += 1
-        #     if points_LA2.shape[0] != 0:
-        #         dpoints_divided["points{}".format(k)] = "L_P2", points_LA2
-        #         k += 1
-        #     if points_RA1.shape[0] != 0:
-        #         dpoints_divided["points{}".format(k)] = "R_P1", points_RA1
-        #         k += 1
-        #     if points_RA2.shape[0] != 0:
-        #         dpoints_divided["points{}".format(k)] = "R_P2", points_RA2
-        #         k += 1
-
     return dpoints_divided
 
 
@@ -1043,7 +863,6 @@ def delete_old_arteries(dpoint_i):
 
         if "ICA_MCA" in dpoint_i.get("points{}".format(j))[0]:
 
-            # del dpoint_i["points{}".format(j)]
             I_supp.append(j)
 
         if (
@@ -1051,7 +870,6 @@ def delete_old_arteries(dpoint_i):
             and "L_ACA" in dpoint_i.get("points{}".format(j))[0]
         ):
 
-            # del dpoint_i["points{}".format(j)]
             I_supp.append(j)
 
         if (
