@@ -992,7 +992,7 @@ def createfinal_dicts(dpoint_i, indices):
             dpoint_i.get("points{}".format(i))[1],
         )
         dpoints["points{}".format(j)] = filename, points
-        dvectors["vectors{}".format(j)] = filename, calculate_normal_vectors(points)
+        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(points)
         j += 1
     return dpoints, dvectors
 

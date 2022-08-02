@@ -532,7 +532,7 @@ def division_PCA(pinfo, case, step):
         # If one of the PCA is merged with the basilar : separation
 
         if "BAS_PCA" in files:
-            points_bas_pca = get_spline_points(files, step)
+            points_bas_pca = geom.get_spline_points(files, step)
             side_bas = files[0]
             if side_bas == "L":
                 other_side = "R"
@@ -542,7 +542,7 @@ def division_PCA(pinfo, case, step):
             for subfile in onlyfiles:
 
                 if other_side + "_PCA" in subfile:
-                    points_non_bas_pca = get_spline_points(subfile, step)
+                    points_non_bas_pca = geom.get_spline_points(subfile, step)
 
             # NEW METHOD - Works whatever the direction of the vessel
 
@@ -601,9 +601,9 @@ def division_PCA(pinfo, case, step):
             for subfile in onlyfiles:
 
                 if side_vessel + "_Pcom" in subfile:
-                    points_Pcom = get_spline_points(subfile, step)
+                    points_Pcom = geom.get_spline_points(subfile, step)
                 if side_bas + "_Pcom" in subfile:
-                    points_bas_Pcom = get_spline_points(subfile, step)
+                    points_bas_Pcom = geom.get_spline_points(subfile, step)
 
                 # elif side_vessel + '_PCA' in subfile:
                 #     points_pca=get_spline_points(subfile,step)
@@ -936,7 +936,7 @@ def createfinal_dicts(dpoint_i, indices):
             dpoint_i.get("points{}".format(i))[1],
         )
         dpoints["points{}".format(j)] = filename, points
-        dvectors["vectors{}".format(j)] = filename, calculate_normal_vectors(points)
+        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(points)
         j += 1
     return dpoints, dvectors
 

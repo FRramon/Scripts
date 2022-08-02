@@ -166,7 +166,7 @@ def get_list_files_dat(pinfo, case, num_cycle):
     """
 
     num_cycle = str(num_cycle)
-    case = "baseline"
+    
     path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
     os.chdir(path)
     onlyfiles = []
