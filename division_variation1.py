@@ -71,10 +71,7 @@ def division_ICA(pinfo, case, step):
 
     # LOAD .pth files (Control points)
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -283,10 +280,7 @@ def division_ACA(pinfo, case, step):
 
     dpoints_divided = {}
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -506,10 +500,7 @@ def division_PCA(pinfo, case, step):
                         subfiles, pinfo, case
                     )
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -936,7 +927,9 @@ def createfinal_dicts(dpoint_i, indices):
             dpoint_i.get("points{}".format(i))[1],
         )
         dpoints["points{}".format(j)] = filename, points
-        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(points)
+        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(
+            points
+        )
         j += 1
     return dpoints, dvectors
 

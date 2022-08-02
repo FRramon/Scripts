@@ -67,10 +67,7 @@ def division_ICA(pinfo, case, step):
 
     # LOAD .pth files (Control points)
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -109,7 +106,7 @@ def division_ICA(pinfo, case, step):
         + pinfo
         + "_"
         + case
-        + "_segmentation_no_vti/Segmentations"
+        + "_segmentation/Segmentations"
     )
     os.chdir(pathctgr)
 
@@ -279,10 +276,7 @@ def division_RP(pinfo, case, step):
     """
     dpoints_divided = {}
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -327,7 +321,7 @@ def division_RP(pinfo, case, step):
         + pinfo
         + "_"
         + case
-        + "_segmentation_no_vti/Segmentations"
+        + "_segmentation/Segmentations"
     )
     os.chdir(pathctgr)
 
@@ -636,7 +630,7 @@ def new_division_P_bas(pinfo, case, step):
         + pinfo
         + "_"
         + case
-        + "_segmentation_no_vti/Segmentations"
+        + "_segmentation/Segmentations"
     )
     os.chdir(pathctgr)
 
@@ -651,10 +645,7 @@ def new_division_P_bas(pinfo, case, step):
                 if side_bas + "_Pcom" in subfiles:
                     center_pcom = geom.get_center_radius_ulti(subfiles, pinfo, case)
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -992,7 +983,9 @@ def createfinal_dicts(dpoint_i, indices):
             dpoint_i.get("points{}".format(i))[1],
         )
         dpoints["points{}".format(j)] = filename, points
-        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(points)
+        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(
+            points
+        )
         j += 1
     return dpoints, dvectors
 

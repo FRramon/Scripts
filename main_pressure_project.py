@@ -100,8 +100,6 @@ def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints):
     dvectors = {}
     onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle)
 
-    
-
     # Inverse the order of the points if the pressure is not decreasing
 
     if (
@@ -149,7 +147,6 @@ def get_distance(vectors):
     return dist
 
 
-
 def get_list_files_dat(pinfo, case, num_cycle):
     """
 
@@ -166,7 +163,7 @@ def get_list_files_dat(pinfo, case, num_cycle):
     """
 
     num_cycle = str(num_cycle)
-    
+
     path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
     os.chdir(path)
     onlyfiles = []
@@ -310,7 +307,6 @@ def plot_other(data_file, vessel_name):
 
         coordinates_fluent = np.array([x_base, y_base, z_base]).T
 
-     
         xm = np.mean(x_base)
         ym = np.mean(y_base)
         zm = np.mean(z_base)
@@ -650,16 +646,9 @@ def compute_along(i_vessel, dpoints, dvectors):
 
             Lpressure = np.array([Lmin, Lavg, Lmax])
 
-           
-       
-        
-        
-
     else:
         L = [0] * (len(points))
         Lpressure = np.array([L, L, L])
-
-   
 
     return Lpressure
 

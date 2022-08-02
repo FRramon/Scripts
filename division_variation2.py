@@ -46,9 +46,7 @@ import geometry_slice as geom
 importlib.reload(geom)
 
 
-
 # %% Functions
-
 
 
 def division_ICA(pinfo, case, step):
@@ -69,10 +67,7 @@ def division_ICA(pinfo, case, step):
 
     # LOAD .pth files (Control points)
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -264,7 +259,6 @@ def division_ICA(pinfo, case, step):
     return dpoints_divided
 
 
-
 def division_PCA(pinfo, case, step):
     """
 
@@ -314,10 +308,7 @@ def division_PCA(pinfo, case, step):
                         subfiles, pinfo, case
                     )
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -556,7 +547,7 @@ def division_PCA(pinfo, case, step):
             )
 
             ax.legend()
-            ax.view_init(30,90)
+            ax.view_init(30, 90)
             plt.show()
 
             dpoints_divided = {}
@@ -585,202 +576,6 @@ def division_PCA(pinfo, case, step):
 
             return dpoints_divided
 
-# def division_ICA(pinfo, case, step):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str, example : 'pt2' , 'vsp7'
-#     case : str, 'baseline' or 'vasospasm'
-
-#     Returns
-#     -------
-#     dpoints_divided : dict of all the control points for the vessels of the patient,
-#     with the ICA_MCA --> ICA & MCA for left and right.
-
-#     """
-
-#     if pinfo == "pt2":
-#         folder = "_segmentation_no_vti"
-#     else:
-#         folder = "_segmentation"
-#     pathpath = (
-#         "N:/vasospasm/"
-#         + pinfo
-#         + "/"
-#         + case
-#         + "/1-geometry/"
-#         + pinfo
-#         + "_"
-#         + case
-#         + folder
-#         + "/paths"
-#     )
-
-#     os.chdir(pathpath)
-#     onlyfiles = []
-#     for file in glob.glob("*.pth"):
-#         onlyfiles.append(file)
-#     for files in onlyfiles:
-#         if "L_ACA" in files:
-#             points_LACA = get_spline_points(files, step)
-#         if "R_ACA" in files:
-#             points_RACA = get_spline_points(files, step)
-#         if "L_ICA_MCA" in files:
-#             points_LICAMCA = get_spline_points(files, step)
-#         if "R_ICA_MCA" in files:
-#             points_RICAMCA = get_spline_points(files, step)
-
-#     ltarget = [points_LACA[0], points_LACA[points_LACA.shape[0] - 1]]
-#     rtarget = [points_RACA[0], points_RACA[points_RACA.shape[0] - 1]]
-#     lnorms_end = []
-#     lnorms_start = []
-
-#     for i in range(points_LICAMCA.shape[0]):
-#         # Norm between first/last  LACA points and LICAMCA points
-#         norm_end = np.linalg.norm(ltarget[1] - points_LICAMCA[i])
-#         norm_start = np.linalg.norm(ltarget[0] - points_LICAMCA[i])
-
-#         lnorms_end.append(norm_end)
-#         lnorms_start.append(norm_start)
-
-#     # Min of the two lists
-#     Ltot_norms = lnorms_end + lnorms_start
-#     lmini = np.min(Ltot_norms)
-#     limin = Ltot_norms.index(lmini)
-#     if limin > len(lnorms_end):
-#         limin -= len(lnorms_end)
-
-#     points_LICA = points_LICAMCA[:limin]
-#     points_LMCA = points_LICAMCA[limin:]
-
-#     # Same Method for the right side
-
-#     rnorms_end = []
-#     rnorms_start = []
-#     for i in range(points_RICAMCA.shape[0]):
-#         norm_end = np.linalg.norm(rtarget[1] - points_RICAMCA[i])
-#         norm_start = np.linalg.norm(rtarget[0] - points_RICAMCA[i])
-#         rnorms_end.append(norm_end)
-#         rnorms_start.append(norm_start)
-
-#     Ltot_norms = rnorms_end + rnorms_start
-#     rmini = np.min(Ltot_norms)
-#     rimin = Ltot_norms.index(rmini)
-#     if rimin > len(rnorms_end):
-#         rimin -= len(rnorms_end)
-
-#     points_RICA = points_RICAMCA[:rimin]
-#     points_RMCA = points_RICAMCA[rimin:]
-
-#     fig = plt.figure(figsize=(7, 7))
-#     ax = fig.add_subplot(111, projection="3d")
-#     ax.grid()
-
-#     ax.scatter(
-#         points_LICA[:, 0], points_LICA[:, 1], points_LICA[:, 2], label="LEFT ICA"
-#     )
-#     ax.scatter(
-#         points_RICA[:, 0], points_RICA[:, 1], points_RICA[:, 2], label="RIGHT ICA "
-#     )
-#     ax.scatter(
-#         points_RMCA[:, 0], points_RMCA[:, 1], points_RMCA[:, 2], label="RIGHT MCA"
-#     )
-#     ax.scatter(
-#         points_LMCA[:, 0], points_LMCA[:, 1], points_LMCA[:, 2], label="LEFT MCA"
-#     )
-#     ax.scatter(
-#         points_LACA[:, 0], points_LACA[:, 1], points_LACA[:, 2], label="LEFT ACA "
-#     )
-#     ax.scatter(
-#         points_RACA[:, 0], points_RACA[:, 1], points_RACA[:, 2], label="RIGHT ACA "
-#     )
-
-#     ax.view_init(30, 90)
-#     ax.legend()
-#     plt.show()
-
-#     dpoints_divided = {}
-#     k = 0
-#     if points_LICA.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "L_ICA", points_LICA
-#         k += 1
-#     if points_RICA.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "R_ICA", points_RICA
-#         k += 1
-#     if points_LMCA.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "L_MCA", points_LMCA
-#         k += 1
-#     if points_RMCA.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "R_MCA", points_RMCA
-#         k += 1
-
-#     return dpoints_divided
-
-
-# def division_P_2(pinfo, case, vessel):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str. example : 'pt2'
-#     case : str. example : 'baseline'
-#     vessel : .pth file of the vessel.
-
-#     Returns
-#     -------
-#     dpoints_divided : dictionary of the control points
-
-#     """
-
-#     dpoints_divided = {}
-
-#     if pinfo=='pt2':
-#         folder='_segmentation_no_vti'
-#     else:
-#         folder='_segmentation'
-#     pathpath = 'N:/vasospasm/' + pinfo + '/' + case+'/1-geometry/' + \
-#         pinfo + '_'+ case + folder +'/paths'
-
-
-#     target_vessel = vessel[:2] + "PCA"
-#     os.chdir(pathpath)
-#     onlyfiles = []
-#     for file in glob.glob("*.pth"):
-#         onlyfiles.append(file)
-#     for files in onlyfiles:
-#         if vessel in files:
-#             points_Pcom = get_spline_points(files,step)
-
-#         if target_vessel in files:
-#             points_PCA = get_spline_points(files,step)
-
-#     target = points_Pcom[points_Pcom.shape[0] - 1]
-#     norms = []
-#     for i in range(points_PCA.shape[0]):
-#         norm_i = np.linalg.norm(target - points_PCA[i])
-#         norms.append(norm_i)
-#     mini = np.min(norms)
-#     imin = norms.index(mini)
-#     points_P1 = points_PCA[:imin]
-#     points_P2 = points_PCA[imin:]
-#     dpoints_divided = {}
-#     k = 0
-#     if points_P1.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = vessel[:3] + "1", points_P1
-#         k += 1
-#     if points_P2.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = vessel[:3] + "2", points_P2
-#         k += 1
-
-#     # En l'occurence, le patient n'a pas de rpcom, mais OK parce que RP1 est
-#     # vide.
-
-#     return dpoints_divided
-
-
 
 def division_ACAs(pinfo, case, step):
     """
@@ -801,10 +596,7 @@ def division_ACAs(pinfo, case, step):
 
     # pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -934,428 +726,6 @@ def division_ACAs(pinfo, case, step):
         k += 1
 
     return dpoints_divided
-
-
-# def manual_division(pinfo, case, vessel, step):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str. example : 'pt2'
-#     case : str. example : 'baseline'
-#     vessel : .pth file of the vessel.
-
-#     Returns
-#     -------
-#     dpoints_divided :dictionary of the control points
-#     target :coordinates of the input point
-
-#     """
-#     dpoints_divided = {}
-
-#     # pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
-
-#     if pinfo == "pt2":
-#         folder = "_segmentation_no_vti"
-#     else:
-#         folder = "_segmentation"
-#     pathpath = (
-#         "N:/vasospasm/"
-#         + pinfo
-#         + "/"
-#         + case
-#         + "/1-geometry/"
-#         + pinfo
-#         + "_"
-#         + case
-#         + folder
-#         + "/paths"
-#     )
-
-#     os.chdir(pathpath)
-#     onlyfiles = []
-#     print(vessel)
-#     for file in glob.glob("*.pth"):
-#         onlyfiles.append(file)
-#     for files in onlyfiles:
-#         if vessel in files:
-#             points_vessel = get_spline_points(files, step)
-
-#     fig = plt.figure(figsize=(7, 7))
-#     ax = fig.add_subplot(111, projection="3d")
-#     ax.grid(False)
-#     X, Y, Z = points_vessel[:, 0], points_vessel[:, 1], points_vessel[:, 2]
-#     ax.plot(X, Y, Z, "--")
-#     ax.plot(X, Y, Z, "o")
-#     plt.title(vessel)
-#     i_point = 0
-#     for x, y, z in zip(X, Y, Z):
-#         annotation = "point {}".format(i_point)
-#         ax.text(x, y, z, annotation)
-#         i_point += 1
-#     plt.show()
-
-#     print("\n")
-#     print("## Select separation point ##   " + vessel[:-4] + "\n")
-#     for i in range(len(points_vessel)):
-#         print("   ", i, " : point ", i)
-
-#     target = int(input("-->  "))
-
-#     points_1 = points_vessel[:target]
-#     points_2 = points_vessel[target:]
-#     dpoints_divided = {}
-#     k = 0
-#     if points_1.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = vessel[:3] + "1", points_1
-#         k += 1
-#     if points_2.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = vessel[:3] + "2", points_2
-#         k += 1
-
-#     return dpoints_divided
-
-
-
-
-# def division_A(pinfo, case, step):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str, example : 'pt2' , 'vsp7'
-#     case : str, 'baseline' or 'vasospasm'
-
-#     Returns
-#     -------
-#     dpoints_divided : dict of the control points for every vessel
-
-#     """
-
-#     dpoints_divided = {}
-
-#     # pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
-
-#     if pinfo == "pt2":
-#         folder = "_segmentation_no_vti"
-#     else:
-#         folder = "_segmentation"
-#     pathpath = (
-#         "N:/vasospasm/"
-#         + pinfo
-#         + "/"
-#         + case
-#         + "/1-geometry/"
-#         + pinfo
-#         + "_"
-#         + case
-#         + folder
-#         + "/paths"
-#     )
-
-#     os.chdir(pathpath)
-#     onlyfiles = []
-#     for file in glob.glob("*.pth"):
-#         onlyfiles.append(file)
-#     for files in onlyfiles:
-#         if "Acom" in files:
-#             points_Acom = get_spline_points(files, step)
-#         if "L_ACA" in files:
-#             points_LACA = get_spline_points(files, step)
-#         if "R_ACA" in files:
-#             points_RACA = get_spline_points(files, step)
-
-#     # Assuming that Acom is well oriented from left to right
-
-#     ltarget = points_Acom[points_Acom.shape[0] - 1]
-#     rtarget = points_Acom[0]
-
-#     lnorms = []
-#     for i in range(points_LACA.shape[0]):
-#         lnorm = np.linalg.norm(ltarget - points_LACA[i])
-#         lnorms.append(lnorm)
-#     lmini = np.min(lnorms)
-#     limin = lnorms.index(lmini)
-#     points_LA1 = points_LACA[:limin]
-#     points_LA2 = points_LACA[limin:]
-#     rnorms = []
-#     for i in range(points_RACA.shape[0]):
-#         rnorm = np.linalg.norm(rtarget - points_RACA[i])
-#         rnorms.append(rnorm)
-#     rmini = np.min(rnorms)
-#     imin = rnorms.index(rmini)
-
-#     points_RA1 = points_RACA[:imin]
-#     points_RA2 = points_RACA[imin:]
-
-#     fig = plt.figure(figsize=(7, 7))
-#     ax = fig.add_subplot(111, projection="3d")
-#     ax.grid()
-
-#     ax.scatter(points_Acom[:, 0], points_Acom[:, 1], points_Acom[:, 2], label="Acom")
-#     ax.scatter(
-#         points_RA1[:, 0], points_RA1[:, 1], points_RA1[:, 2], label="RIGHT ACA A1"
-#     )
-#     ax.scatter(
-#         points_RA2[:, 0], points_RA2[:, 1], points_RA2[:, 2], label="RIGHT ACA A2"
-#     )
-#     ax.scatter(
-#         points_LA1[:, 0], points_LA1[:, 1], points_LA1[:, 2], label="LEFT ACA A1"
-#     )
-#     ax.scatter(
-#         points_LA2[:, 0], points_LA2[:, 1], points_LA2[:, 2], label="LEFT ACA A2"
-#     )
-
-#     ax.view_init(30, 90)
-#     ax.legend()
-#     plt.show()
-
-#     dpoints_divided = {}
-#     k = 0
-#     if points_LA1.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "L_A1", points_LA1
-#         k += 1
-#     if points_LA2.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "L_A2", points_LA2
-#         k += 1
-#     if points_RA1.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "R_A1", points_RA1
-#         k += 1
-#     if points_RA2.shape[0] != 0:
-#         dpoints_divided["points{}".format(k)] = "R_A2", points_RA2
-#         k += 1
-
-#     return dpoints_divided
-
-
-# def division_P_bas(pinfo, case, step):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str, example : 'pt2' , 'vsp7'
-#     case : str, 'baseline' or 'vasospasm'
-
-#     Returns
-#     -------
-#     dpoints_divided : dict of the control points for every vessel
-
-#     """
-
-#     dpoints_divided = {}
-
-#     # pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
-
-#     if pinfo == "pt2":
-#         folder = "_segmentation_no_vti"
-#     else:
-#         folder = "_segmentation"
-#     pathpath = (
-#         "N:/vasospasm/"
-#         + pinfo
-#         + "/"
-#         + case
-#         + "/1-geometry/"
-#         + pinfo
-#         + "_"
-#         + case
-#         + folder
-#         + "/paths"
-#     )
-
-#     os.chdir(pathpath)
-#     onlyfiles = []
-#     for file in glob.glob("*.pth"):
-#         onlyfiles.append(file)
-#     for files in onlyfiles:
-
-#         # If one of the PCA is merged with the basilar : separation
-
-#         if "BAS_PCA" in files:
-#             points_bas_pca = get_spline_points(files, step)
-#             side_bas = files[0]
-
-#             for subfile in onlyfiles:
-
-#                 if side_bas == "L":
-#                     if "R_PCA" in subfile:
-#                         points_target = get_spline_points(subfile, step)
-
-#                 else:
-#                     if "L_PCA" in subfile:
-#                         points_target = get_spline_points(subfile, step)
-#             # NEW METHOD - Works whatever the direction of the vessel
-
-#             target = [points_target[0], points_target[points_target.shape[0] - 1]]
-#             lnorms_end = []
-#             lnorms_start = []
-
-#             for i in range(points_bas_pca.shape[0]):
-#                 # Norm between first/last  LACA points and LICAMCA points
-#                 norm_end = np.linalg.norm(target[1] - points_bas_pca[i])
-#                 norm_start = np.linalg.norm(target[0] - points_bas_pca[i])
-#                 lnorms_end.append(norm_end)
-#                 lnorms_start.append(norm_start)
-#             # Min of the two lists
-#             Ltot_norms = lnorms_end + lnorms_start
-
-#             lmini = np.min(Ltot_norms)
-#             limin = Ltot_norms.index(lmini)
-#             if limin > len(lnorms_end):
-#                 limin -= len(lnorms_end)
-
-#             # DIVISION BAS & PCA
-
-#             points_pca = points_bas_pca[limin:]
-#             points_bas = points_bas_pca[:limin]
-#             print(points_bas.shape)
-#             print("\n")
-#             print(points_pca.shape)
-
-#             if side_bas == "L":
-#                 side_vessel = "R"
-#             else:
-#                 side_vessel = "L"
-
-#             print(side_vessel)
-#             print(side_bas)
-#             for subfile in onlyfiles:
-
-#                 if side_vessel + "_Pcom" in subfile:
-#                     points_Pcom = get_spline_points(subfile, step)
-#                     print(subfile)
-#                 elif side_bas + "_Pcom" in subfile:
-#                     points_bas_Pcom = get_spline_points(subfile, step)
-#                     print(subfile)
-
-#                 # elif side_vessel + '_PCA' in subfile:
-#                 #     points_pca=get_spline_points(subfile,step)
-
-#             # DIVISIN P1 P2 ON BASILAR SIDE
-
-#             # Definition of the target points (take the first and last to be
-#             # direction independent)
-#             target = [points_Pcom[0], points_Pcom[points_Pcom.shape[0] - 1]]
-#             target_bas = [
-#                 points_bas_Pcom[0],
-#                 points_bas_Pcom[points_bas_Pcom.shape[0] - 1],
-#             ]
-#             print(target_bas)
-#             bas_norms_start = []
-#             bas_norms_end = []
-#             for i in range(points_pca.shape[0]):
-#                 norm_start = np.linalg.norm(target_bas[0] - points_pca[i])
-#                 norm_end = np.linalg.norm(target_bas[1] - points_pca[i])
-
-#                 bas_norms_start.append(norm_start)
-#                 bas_norms_end.append(norm_end)
-
-#             Ltot_norms = bas_norms_end + bas_norms_start
-#             lmini = np.min(Ltot_norms)
-#             limin = Ltot_norms.index(lmini)
-#             print("Len : ", bas_norms_start)
-#             print("limin : ", limin)
-#             if limin > len(bas_norms_end):
-#                 limin -= len(bas_norms_end)
-
-#             points_bas_P1 = points_pca[:limin]
-#             points_bas_P2 = points_pca[limin:]
-
-#             print("P1 : ", points_bas_P1.shape)
-#             print("P2 : ", points_bas_P2)
-
-#             # SEPARATION P1 P2 NOT ON THE BASILAR SIDE
-
-#             nb_norms_start = []
-#             nb_norms_end = []
-#             for i in range(points_target.shape[0]):
-#                 norm_start = np.linalg.norm(target[0] - points_target[i])
-#                 norm_end = np.linalg.norm(target[1] - points_target[i])
-
-#                 nb_norms_start.append(norm_start)
-#                 nb_norms_end.append(norm_end)
-
-#             Ltot_norms = nb_norms_end + nb_norms_start
-#             lmini = np.min(Ltot_norms)
-#             limin = Ltot_norms.index(lmini)
-
-#             if limin > len(nb_norms_end):
-#                 limin -= len(nb_norms_end)
-
-#             points_P1 = points_target[:limin]
-#             points_P2 = points_target[limin:]
-
-#             fig = plt.figure(figsize=(7, 7))
-#             ax = fig.add_subplot(111, projection="3d")
-#             ax.grid()
-#             ax.scatter(
-#                 points_bas[:, 0], points_bas[:, 1], points_bas[:, 2], label="basilar"
-#             )
-
-#             ax.scatter(
-#                 points_bas_Pcom[:, 0],
-#                 points_bas_Pcom[:, 1],
-#                 points_bas_Pcom[:, 2],
-#                 label=" basilar side Pcom",
-#             )
-#             ax.scatter(
-#                 points_Pcom[:, 0],
-#                 points_Pcom[:, 1],
-#                 points_Pcom[:, 2],
-#                 label="non basilar side Pcom",
-#             )
-#             ax.scatter(
-#                 points_bas_P1[:, 0],
-#                 points_bas_P1[:, 1],
-#                 points_bas_P1[:, 2],
-#                 label="basilar side P1",
-#             )
-#             ax.scatter(
-#                 points_bas_P2[:, 0],
-#                 points_bas_P2[:, 1],
-#                 points_bas_P2[:, 2],
-#                 label="basilar side P2",
-#             )
-#             ax.scatter(
-#                 points_P1[:, 0],
-#                 points_P1[:, 1],
-#                 points_P1[:, 2],
-#                 label="Non Basilar side P1",
-#             )
-#             ax.scatter(
-#                 points_P2[:, 0],
-#                 points_P2[:, 1],
-#                 points_P2[:, 2],
-#                 label="Non Basilar side P2",
-#             )
-
-#             ax.legend()
-#             plt.show()
-
-#             dpoints_divided = {}
-#             k = 0
-#             if points_bas.shape[0] != 0:
-#                 dpoints_divided["points{}".format(k)] = side_bas + "_BAS", points_bas
-#                 k += 1
-#             if points_bas_P1.shape[0] != 0:
-#                 dpoints_divided["points{}".format(k)] = side_bas + "_P1", points_bas_P1
-#                 k += 1
-#             if points_bas_P2.shape[0] != 0:
-#                 dpoints_divided["points{}".format(k)] = side_bas + "_P2", points_bas_P2
-#                 k += 1
-#             if points_P1.shape[0] != 0:
-#                 dpoints_divided["points{}".format(k)] = side_vessel + "_P1", points_P1
-#                 k += 1
-#             if points_P2.shape[0] != 0:
-#                 dpoints_divided["points{}".format(k)] = side_vessel + "_P2", points_P2
-#                 k += 1
-
-#             return dpoints_divided
-
-#     return dpoints_divided
 
 
 def add_divided_arteries(dpoint_i, dpoints_div):
@@ -1515,7 +885,9 @@ def createfinal_dicts(dpoint_i, indices):
             dpoint_i.get("points{}".format(i))[1],
         )
         dpoints["points{}".format(j)] = filename, points
-        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(points)
+        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(
+            points
+        )
         j += 1
     return dpoints, dvectors
 
