@@ -1,0 +1,35 @@
+# Pressure-project-Circle-of-Willis
+Python and Pytecplot scripts to compute the pressure and resistance in the vessels of the circle of Willis
+
+
+The object of this script is to compute and plot the pressure along the vessels 
+of the circle of Willis of a specific patient for certain points.
+This program 
+    --> Step 1 : Extract files and coordinates, label names. All in a dictionnary
+    --> Step 2: Operate a divison for ICA_MCA --> ICA & MCA, PCA --> P1 & P2 and ACA --> A1 & A2.
+These division are made automatically if there is the right vessel to make the separation :
+    - ACA for the ICA_MCA
+    - Pcom for the PCA
+    - Acom for the ACA
+The separation is made finding the closest point of the unsparated vessel from 
+the first/last point of the vessel used to do the separation, by minimazing the euclidian distances.
+If there is a vessel missing, the separation is made manually by the user, which enter the coordinates
+of the separation point.
+    --> Step 3 : Add the divided ones in coordinates dictionnary, and remove the ICA_MCA/PCA/ACAs
+    
+    --> Step 4 : Compute the vectors dictionnary
+    
+This is just made by substracting the coordinates of the points terms to terms.
+    --> Step 5 : Compute pressure with tecplot
+    
+        Step 5.1 : Selecting the good case (patient, case, num_cycle, .dat file), and load data into Tecplot
+        Step 5.2 : Find the list of the closest points in fluent to the control points.
+        Step 5.3 : Make a slice for each control point and normal vector
+        Step 5.4 : Find the subslice that correspond to the vessel in which one is interested
+        Step 5.5 : Compute the average pressure in the subslice
+        Step 5.6 : Save the pressures in a dictionnary,containing every cycle/.dat file/ vessel.
+        Step 5.7 : change the order of the vessel if necessary to have a decreasing plot of pressure
+    --> Step 6 : Plot pressure in each vessel
+        
+        Step 7 : extract flowrate, compute delta_P, and plot time average resistance along the segments.
+        
