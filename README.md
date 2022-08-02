@@ -4,6 +4,11 @@
 Python and Pytecplot scripts to compute the pressure and resistance in the vessels of the circle of Willis. The object of this script is to compute and plot the pressure along the vessels 
 of the circle of Willis of a specific patient for certain points.
 
+[Add detail]
+
+![plot_slices_lica_pt2b](https://user-images.githubusercontent.com/109392345/182479044-ba92a417-7e28-4e2c-8c7e-d984676c9c31.png)
+
+
 ## Context illustrations
 
 #### Sketch of the anatomy of the circle of Willis
@@ -23,10 +28,8 @@ of the circle of Willis of a specific patient for certain points.
 
 - Step 1 : Extract files and coordinates, label names. All in a dictionnary
 - Step 2: Operate a divison for ICA_MCA --> ICA & MCA, PCA --> P1 & P2 and ACA --> A1 & A2.
-These division are made automatically if there is the right vessel to make the separation :
-    - ACA for the ICA_MCA
-    - Pcom for the PCA
-    - Acom for the ACA
+
+The division depend of the variation of the circle of Willis of the patient, which are exposed below.
     
 ### Variations of the circle of Willis :
  | Variation id  | Specification |
@@ -40,14 +43,17 @@ These division are made automatically if there is the right vessel to make the s
 | 7  |  Missing Left Pcom |
 | 8 |  Missing Right Pcom  |
 
-    
-The separation is made finding the closest point of the unsparated vessel from 
-the first/last point of the vessel used to do the separation, by minimazing the euclidian distances.
+For the complete circle of Willis, these division are made automatically with the following vessels to make the separation :
+    - ACA for the ICA_MCA
+    - Pcom for the PCA
+    - Acom for the ACA  
+The separation is made finding the closest point of the unsparated vessel from the first/last point of the vessel used to do the separation, by minimazing the euclidian distances.
+
 If there is a vessel missing, the separation is made manually by the user, which enter the coordinates
-of the separation point.
-- Step 3 : Add the divided ones in coordinates dictionnary, and remove the ICA_MCA/PCA/ACAs
-    
-- Step 4 : Compute the vectors dictionnary
+of the separation point. This is made at the zones impacted by the lack of a vessel in the other variation. Each variation have a python script, and the main() returns 
+the complete dictionary of the control points in each vessel.
+
+Hence the dictionary of the normal vectors can be calculated from the dictionary of control points
     
 This is just made by substracting the coordinates of the points terms to terms.
 - Step 5 : Compute pressure with tecplot
