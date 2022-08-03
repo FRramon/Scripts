@@ -47,10 +47,15 @@ def get_spline_points(fname, step):
         xml = f.read()
         root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
 
+    # index depends on the coding version of the xml file. Some have a format branch, other don't
+    index=0
+    if 'format' in str(root[0]):
+        index=1
+        
     # find the branch of the tree which contains control points
 
-    branch = root[1][0][0][1]
-
+    branch = root[index][0][0][1]
+   
     n_points = len(branch)
     n_s_points = n_points / step
 
@@ -116,23 +121,23 @@ def calculate_norms(vectors):
     return norms
 
 
-def find_number_of_steps(points_vessel, radius):
+# def find_number_of_steps(points_vessel, radius):
 
-    # Convert the radius into the equivalent of steps in the vessel coordinates array
+#     # Convert the radius into the equivalent of steps in the vessel coordinates array
 
-    vect_vessel = calculate_normal_vectors(points_vessel)
-    norms_vessel = calculate_norms(vect_vessel)
+#     vect_vessel = calculate_normal_vectors(points_vessel)
+#     norms_vessel = calculate_norms(vect_vessel)
 
-    # Compute the norms from 0 to i, i variating between 0 and len(vessel)
-    L_dist_along = [np.sum(norms_vessel[0:i]) for i in range(norms_vessel.shape[0])]
-    # Compare the previous norms and the radius
-    L_compare_r = [abs(L_dist_along[i] - radius) for i in range(len(L_dist_along))]
-    # Select the index of the minimum distance, which correspond to the indice to remove.
-    step_vessel = L_compare_r.index(min(L_compare_r))
+#     # Compute the norms from 0 to i, i variating between 0 and len(vessel)
+#     L_dist_along = [np.sum(norms_vessel[0:i]) for i in range(norms_vessel.shape[0])]
+#     # Compare the previous norms and the radius
+#     L_compare_r = [abs(L_dist_along[i] - radius) for i in range(len(L_dist_along))]
+#     # Select the index of the minimum distance, which correspond to the indice to remove.
+#     step_vessel = L_compare_r.index(min(L_compare_r))
 
-    # return step_bas,step_lsc,step_rsc
+#     # return step_bas,step_lsc,step_rsc
 
-    return step_vessel
+#     return step_vessel
 
 
 def create_dpoint(pinfo, case, step):
@@ -313,7 +318,7 @@ def find_number_of_steps(points_vessel, radius):
     # Compute the norms from 0 to i, i variating between 0 and len(vessel)
     L_dist_along = [np.sum(norms_vessel[0:i]) for i in range(norms_vessel.shape[0])]
     # Compare the previous norms and the radius
-    L_compare_r = [abs(L_dist_along[i] - radius) for i in range(len(L_dist_along))]
+    L_compare_r = [abs(L_dist_along[i] - radius/2) for i in range(len(L_dist_along))]
     # Select the index of the minimum distance, which correspond to the indice to remove.
     step_vessel = L_compare_r.index(min(L_compare_r))
 
@@ -321,7 +326,108 @@ def find_number_of_steps(points_vessel, radius):
 
     return step_vessel
 
+def bifurcation_and_radius_remove(points_to_divide,points_bifurc,center_bifurc):
+    
+    nb_norms_start = []
+    nb_norms_end = []
+    target= [points_bifurc[0], points_bifurc[points_bifurc.shape[0] - 1]]
+    for i in range(points_to_divide.shape[0]):
+        norm_start = np.linalg.norm(target[0] - points_to_divide[i])
+        norm_end = np.linalg.norm(target[1] - points_to_divide[i])
 
+        nb_norms_start.append(norm_start)
+        nb_norms_end.append(norm_end)
+
+    Ltot_norms = nb_norms_end + nb_norms_start
+    lmini = np.min(Ltot_norms)
+    limin = Ltot_norms.index(lmini)
+
+    if limin > len(nb_norms_end):
+        limin_final = limin - len(nb_norms_end)
+    else:
+        limin_final = limin
+
+    points_1 = points_to_divide[:limin_final]
+    points_2 = points_to_divide[limin_final:]
+    
+    print('points_1 : ',points_1)
+    print('points_2 : ', points_2)
+        
+    if limin <= len(nb_norms_end):
+        indice_1 = find_number_of_steps(
+            points_1, center_bifurc.get("center1")[1]
+        )
+        indice_2 = find_number_of_steps(
+            points_2, center_bifurc.get("center1")[1]
+        )
+    else:
+        indice_1 = find_number_of_steps(
+            points_1, center_bifurc.get("center2")[1]
+        )
+        indice_2 = find_number_of_steps(
+            points_2, center_bifurc.get("center2")[1]
+        )
+
+    points_1 = points_1[: points_1.shape[0] - indice_1]
+    points_2 = points_2[indice_2:]
+
+
+    return points_1, points_2
+
+
+def bifurcation(points_to_divide,points_bifurc):
+    
+    nb_norms_start = []
+    nb_norms_end = []
+    target= [points_bifurc[0], points_bifurc[points_bifurc.shape[0] - 1]]
+    for i in range(points_to_divide.shape[0]):
+        norm_start = np.linalg.norm(target[0] - points_to_divide[i])
+        norm_end = np.linalg.norm(target[1] - points_to_divide[i])
+
+        nb_norms_start.append(norm_start)
+        nb_norms_end.append(norm_end)
+
+    Ltot_norms = nb_norms_end + nb_norms_start
+    lmini = np.min(Ltot_norms)
+    limin = Ltot_norms.index(lmini)
+
+    if limin > len(nb_norms_end):
+        limin_final = limin - len(nb_norms_end)
+    else:
+        limin_final = limin
+
+    points_1 = points_to_divide[:limin_final]
+    points_2 = points_to_divide[limin_final:]
+    
+    if limin<len(nb_norms_end):
+        case_center=1
+    else:
+        case_center=2
+    
+
+    return points_1, points_2,case_center
+
+def remove_center(points_1,points_2,center_bifurc,case_center):
+    
+    if case_center==1:
+        indice_1 = find_number_of_steps(
+            points_1, center_bifurc.get("center1")[1]
+        )
+        indice_2 = find_number_of_steps(
+            points_2, center_bifurc.get("center1")[1]
+        )
+    else:
+        indice_1 = find_number_of_steps(
+            points_1, center_bifurc.get("center2")[1]
+        )
+        indice_2 = find_number_of_steps(
+            points_2, center_bifurc.get("center2")[1]
+        )
+
+    points_1 = points_1[indice_1:]
+    points_2 = points_2[indice_2:]
+    
+    return points_1,points_2
 # Reflexion sur les zones de grand angle
 
 
@@ -402,7 +508,13 @@ def get_center_radius(fname, pinfo, case):
 
     # find the branch of the tree which contains control points
 
-    branch = root[1][0]
+     # index depends on the coding version of the xml file. Some have a format branch, other don't
+    index=0
+    if 'format' in str(root[0]):
+        index=1
+
+
+    branch = root[index][0]
     n_points = len(branch)
     dsurfaces = {}
     for j in range(1, n_points):
@@ -460,8 +572,10 @@ def get_center_radius_ulti(fname, pinfo, case):
         root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
 
     # find the branch of the tree which contains control points
-
-    branch = root[1][0]
+    index=0
+    if 'format' in str(root[0]):
+        index=1
+    branch = root[index][0]
     n_points = len(branch)
     dsurfaces = {}
     for j in range(1, n_points):

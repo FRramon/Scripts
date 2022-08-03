@@ -1,6 +1,7 @@
-# Pressure-project-Circle-of-Willis
-Python and Pytecplot scripts to compute the pressure and resistance in the vessels of the circle of Willis
+# Pressure and Resistance determination by slicing - Tecplot project
 
+
+Python and Pytecplot scripts to compute the pressure and resistance in the vessels of the circle of Willis
 
 The object of this script is to compute and plot the pressure along the vessels 
 of the circle of Willis of a specific patient for certain points.

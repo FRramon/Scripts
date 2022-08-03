@@ -22,6 +22,7 @@ import re
 import os
 from os import listdir
 from os.path import isfile, join
+import importlib
 
 
 import tecplot as tp
@@ -37,6 +38,13 @@ from skg import nsphere
 import pickle
 from tqdm import tqdm
 
+#%% Import intern geometric module
+
+os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
+
+import geometry_slice as geom
+
+importlib.reload(geom)
 
 # %% Functions
 
@@ -103,6 +111,7 @@ def create_dpoint(pinfo, case, step):
     ----------
     pinfo : str, example : 'pt2' , 'vsp7'
     case : str, 'baseline' or 'vasospasm'
+    
 
     Returns
     -------
@@ -924,6 +933,325 @@ def division_P_bas(pinfo, case, step):
     return dpoints_divided
 
 
+
+def division_PCA(pinfo, case, step):
+    """
+
+
+    Parameters
+    ----------
+    pinfo : str, example : 'pt2' , 'vsp7'
+    case : str, 'baseline' or 'vasospasm'
+
+    Returns
+    -------
+    dpoints_divided : dict of the control points for every vessel
+
+    """
+
+    dpoints_divided = {}
+
+    pathctgr = (
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/1-geometry/"
+        + pinfo
+        + "_"
+        + case
+        + "_segmentation/Segmentations"
+    )
+    os.chdir(pathctgr)
+
+    filesctgr = []
+    for file in glob.glob("*.ctgr"):
+        filesctgr.append(file)
+    for files in filesctgr:
+        if "BAS_PCA" in files:
+            center_BAS = geom.get_center_radius_ulti(files, pinfo, case)
+            side_bas = files[0]
+            if side_bas == "L":
+                other_side = "R"
+            else:
+                other_side = "L"
+            for subfiles in filesctgr:
+                if side_bas + "_Pcom" in subfiles:
+                    center_bas_pcom = geom.get_center_radius_ulti(subfiles, pinfo, case)
+                if other_side + "_Pcom" in subfiles:
+                    center_non_bas_pcom = geom.get_center_radius_ulti(
+                        subfiles, pinfo, case
+                    )
+
+    folder = "_segmentation"
+    pathpath = (
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/1-geometry/"
+        + pinfo
+        + "_"
+        + case
+        + folder
+        + "/paths"
+    )
+
+    os.chdir(pathpath)
+    onlyfiles = []
+    for file in glob.glob("*.pth"):
+        onlyfiles.append(file)
+    for files in onlyfiles:
+
+        # If one of the PCA is merged with the basilar : separation
+
+        if "BAS_PCA" in files:
+            points_bas_pca = geom.get_spline_points(files, step)
+            side_bas = files[0]
+            if side_bas == "L":
+                other_side = "R"
+            else:
+                other_side = "L"
+
+            for subfile in onlyfiles:
+
+                if other_side + "_PCA" in subfile:
+                    points_non_bas_pca = geom.get_spline_points(subfile, step)
+
+            # NEW METHOD - Works whatever the direction of the vessel
+
+            target = [
+                points_non_bas_pca[0],
+                points_non_bas_pca[points_non_bas_pca.shape[0] - 1],
+            ]
+            lnorms_end = []
+            lnorms_start = []
+
+            for i in range(points_bas_pca.shape[0]):
+                # Norm between first/last  LACA points and LICAMCA points
+                norm_end = np.linalg.norm(target[1] - points_bas_pca[i])
+                norm_start = np.linalg.norm(target[0] - points_bas_pca[i])
+                lnorms_end.append(norm_end)
+                lnorms_start.append(norm_start)
+            # Min of the two lists
+            Ltot_norms = lnorms_end + lnorms_start
+
+            lmini = np.min(Ltot_norms)
+            limin = Ltot_norms.index(lmini)
+
+            if limin > len(lnorms_end):
+                limin_final = limin - len(lnorms_end)
+            else:
+                limin_final = limin
+
+            # DIVISION BAS & PCA
+
+            points_pca = points_bas_pca[limin_final:]
+            points_bas = points_bas_pca[:limin_final]
+
+            if limin <= len(lnorms_end):
+                indice_bas = geom.find_number_of_steps(
+                    points_pca, center_BAS.get("center1")[1]
+                )
+                indice_non_bas = geom.find_number_of_steps(
+                    points_non_bas_pca, center_BAS.get("center1")[1]
+                )
+            else:
+                indice_bas = geom.find_number_of_steps(
+                    points_pca, center_BAS.get("center2")[1]
+                )
+                indice_non_bas = geom.find_number_of_steps(
+                    points_non_bas_pca, center_BAS.get("center2")[1]
+                )
+
+            points_pca = points_pca[indice_bas:]
+            points_non_bas_pca = points_non_bas_pca[indice_non_bas:]
+
+            if side_bas == "L":
+                side_vessel = "R"
+            else:
+                side_vessel = "L"
+
+            for subfile in onlyfiles:
+
+                if side_vessel + "_Pcom" in subfile:
+                    points_Pcom = geom.get_spline_points(subfile, step)
+                if side_bas + "_Pcom" in subfile:
+                    points_bas_Pcom = geom.get_spline_points(subfile, step)
+
+                # elif side_vessel + '_PCA' in subfile:
+                #     points_pca=get_spline_points(subfile,step)
+
+            # DIVISIN P1 P2 ON BASILAR SIDE
+
+            # Definition of the target points (take the first and last to be
+            # direction independent)
+            target = [points_Pcom[0], points_Pcom[points_Pcom.shape[0] - 1]]
+            target_bas = [
+                points_bas_Pcom[0],
+                points_bas_Pcom[points_bas_Pcom.shape[0] - 1],
+            ]
+            bas_norms_start = []
+            bas_norms_end = []
+            for i in range(points_pca.shape[0]):
+                norm_start = np.linalg.norm(target_bas[0] - points_pca[i])
+                norm_end = np.linalg.norm(target_bas[1] - points_pca[i])
+
+                bas_norms_start.append(norm_start)
+                bas_norms_end.append(norm_end)
+
+            Ltot_norms = bas_norms_end + bas_norms_start
+            lmini = np.min(Ltot_norms)
+            limin = Ltot_norms.index(lmini)
+
+            if limin > len(bas_norms_end):
+                limin_final = limin - len(bas_norms_end)
+            else:
+                limin_final = limin
+
+            points_bas_P1 = points_pca[:limin_final]
+            points_bas_P2 = points_pca[limin_final:]
+
+            # Find the number of points to remove
+
+            if limin <= len(lnorms_end):
+                indice_bas_P1 = geom.find_number_of_steps(
+                    points_bas_P1, center_bas_pcom.get("center1")[1]
+                )
+                indice_bas_P2 = geom.find_number_of_steps(
+                    points_bas_P2, center_bas_pcom.get("center1")[1]
+                )
+            else:
+                indice_bas_P1 = geom.find_number_of_steps(
+                    points_bas_P1, center_bas_pcom.get("center2")[1]
+                )
+                indice_bas_P2 = geom.find_number_of_steps(
+                    points_bas_P2, center_bas_pcom.get("center2")[1]
+                )
+
+            points_bas_P1 = points_bas_P1[: points_bas_P1.shape[0] - indice_bas_P1]
+            points_bas_P2 = points_bas_P2[indice_bas_P2:]
+
+            # SEPARATION P1 P2 NOT ON THE BASILAR SIDE
+
+            nb_norms_start = []
+            nb_norms_end = []
+            for i in range(points_non_bas_pca.shape[0]):
+                norm_start = np.linalg.norm(target[0] - points_non_bas_pca[i])
+                norm_end = np.linalg.norm(target[1] - points_non_bas_pca[i])
+
+                nb_norms_start.append(norm_start)
+                nb_norms_end.append(norm_end)
+
+            Ltot_norms = nb_norms_end + nb_norms_start
+            lmini = np.min(Ltot_norms)
+            limin = Ltot_norms.index(lmini)
+
+            if limin > len(nb_norms_end):
+                limin_final = limin - len(nb_norms_end)
+            else:
+                limin_final = limin
+
+            points_non_bas_P1 = points_non_bas_pca[:limin_final]
+            points_non_bas_P2 = points_non_bas_pca[limin_final:]
+
+            # Find the number of points to delete to remove the radius of the non basilar side pcom
+
+            if limin <= len(lnorms_end):
+                indice_non_bas_P1 = geom.find_number_of_steps(
+                    points_non_bas_P1, center_non_bas_pcom.get("center1")[1]
+                )
+                indice_non_bas_P2 = geom.find_number_of_steps(
+                    points_non_bas_P2, center_non_bas_pcom.get("center1")[1]
+                )
+            else:
+                indice_non_bas_P1 = geom.find_number_of_steps(
+                    points_non_bas_P1, center_non_bas_pcom.get("center2")[1]
+                )
+                indice_non_bas_P2 = geom.find_number_of_steps(
+                    points_non_bas_P2, center_non_bas_pcom.get("center2")[1]
+                )
+
+            points_non_bas_P1 = points_non_bas_P1[
+                : points_non_bas_P1.shape[0] - indice_non_bas_P1
+            ]
+            points_non_bas_P2 = points_non_bas_P2[indice_non_bas_P2:]
+
+            fig = plt.figure(figsize=(7, 7))
+            ax = fig.add_subplot(111, projection="3d")
+            ax.grid()
+            ax.scatter(
+                points_bas[:, 0], points_bas[:, 1], points_bas[:, 2], label="basilar"
+            )
+
+            ax.scatter(
+                points_bas_Pcom[:, 0],
+                points_bas_Pcom[:, 1],
+                points_bas_Pcom[:, 2],
+                label=" basilar side Pcom",
+            )
+            ax.scatter(
+                points_Pcom[:, 0],
+                points_Pcom[:, 1],
+                points_Pcom[:, 2],
+                label="non basilar side Pcom",
+            )
+            ax.scatter(
+                points_bas_P1[:, 0],
+                points_bas_P1[:, 1],
+                points_bas_P1[:, 2],
+                label="basilar side P1",
+            )
+            ax.scatter(
+                points_bas_P2[:, 0],
+                points_bas_P2[:, 1],
+                points_bas_P2[:, 2],
+                label="basilar side P2",
+            )
+            ax.scatter(
+                points_non_bas_P1[:, 0],
+                points_non_bas_P1[:, 1],
+                points_non_bas_P1[:, 2],
+                label="Non Basilar side P1",
+            )
+            ax.scatter(
+                points_non_bas_P2[:, 0],
+                points_non_bas_P2[:, 1],
+                points_non_bas_P2[:, 2],
+                label="Non Basilar side P2",
+            )
+
+            ax.legend()
+            plt.show()
+
+            dpoints_divided = {}
+            k = 0
+            if points_bas.shape[0] != 0:
+                dpoints_divided["points{}".format(k)] = side_bas + "_BAS", points_bas
+                k += 1
+            if points_bas_P1.shape[0] != 0:
+                dpoints_divided["points{}".format(k)] = side_bas + "_P1", points_bas_P1
+                k += 1
+            if points_bas_P2.shape[0] != 0:
+                dpoints_divided["points{}".format(k)] = side_bas + "_P2", points_bas_P2
+                k += 1
+            if points_non_bas_P1.shape[0] != 0:
+                dpoints_divided["points{}".format(k)] = (
+                    side_vessel + "_P1",
+                    points_non_bas_P1,
+                )
+                k += 1
+            if points_non_bas_P2.shape[0] != 0:
+                dpoints_divided["points{}".format(k)] = (
+                    side_vessel + "_P2",
+                    points_non_bas_P2,
+                )
+                k += 1
+
+            return dpoints_divided
+
+
+
 def add_divided_arteries(dpoint_i, dpoints_div):
     """
     Parameters
@@ -1093,13 +1421,13 @@ def createfinal_dicts(dpoint_i, indices):
 
 def _main_(pinfo, case, step):
 
-    dpoint_i = create_dpoint(pinfo, case, step)
+    dpoint_i = geom.create_dpoint(pinfo, case, step)
 
     # Step 2# Divide
 
     dpoints_divI = division_ICA(pinfo, case, step)
     dpoints_divACA = division_ACAs(pinfo, case, step)
-    dpoints_divPCA = division_P_bas(pinfo, case, step)
+    dpoints_divPCA = division_PCA(pinfo, case, step)
 
     dpoints = dpoint_i.copy()
 
