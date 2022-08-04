@@ -41,7 +41,7 @@ from tqdm import tqdm
 
 os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
 
-import geometry_slice
+import geometry_slice as geom
 
 importlib.reload(geom)
 
@@ -119,93 +119,10 @@ def division_ICA(pinfo, case, step):
         if "R_ACA" in files:
             center_RACA = geom.get_center_radius_ulti(files, pinfo, case)
 
-    ltarget = [points_LACA[0], points_LACA[points_LACA.shape[0] - 1]]
-    rtarget = [points_RACA[0], points_RACA[points_RACA.shape[0] - 1]]
-    lnorms_end = []
-    lnorms_start = []
-
-    for i in range(points_LICAMCA.shape[0]):
-        # Norm between first/last  LACA points and LICAMCA points
-        norm_end = np.linalg.norm(ltarget[1] - points_LICAMCA[i])
-        norm_start = np.linalg.norm(ltarget[0] - points_LICAMCA[i])
-
-        lnorms_end.append(norm_end)
-        lnorms_start.append(norm_start)
-
-    # Min of the two lists
-    Ltot_norms = lnorms_end + lnorms_start
-    lmini = np.min(Ltot_norms)
-    limin = Ltot_norms.index(lmini)
-
-    # Udpdate the index of the separation point, depending on the direction of the separation vessel
-
-    if limin > len(lnorms_end):
-        limin_final = limin - len(lnorms_end)
-    else:
-        limin_final = limin
-
-    points_LICA = points_LICAMCA[:limin_final]
-    points_LMCA = points_LICAMCA[limin_final:]
-
-    # Definition of the indices to truncate (the equivalent of a radius of laca on each side)
-
-    if limin <= len(lnorms_end):
-        indice_LICA = geom.find_number_of_steps(
-            points_LICA, center_LACA.get("center1")[1]
-        )
-        indice_LMCA = geom.find_number_of_steps(
-            points_LMCA, center_LACA.get("center1")[1]
-        )
-    else:
-        indice_LICA = geom.find_number_of_steps(
-            points_LICA, center_LACA.get("center2")[1]
-        )
-        indice_LMCA = geom.find_number_of_steps(
-            points_LMCA, center_LACA.get("center2")[1]
-        )
-
-    points_LICA = points_LICA[: points_LICA.shape[0] - indice_LICA]
-    points_LMCA = points_LMCA[indice_LMCA:]
-
-    # Same Method for the right side
-
-    rnorms_end = []
-    rnorms_start = []
-    for i in range(points_RICAMCA.shape[0]):
-        norm_end = np.linalg.norm(rtarget[1] - points_RICAMCA[i])
-        norm_start = np.linalg.norm(rtarget[0] - points_RICAMCA[i])
-        rnorms_end.append(norm_end)
-        rnorms_start.append(norm_start)
-
-    Ltot_norms = rnorms_end + rnorms_start
-    rmini = np.min(Ltot_norms)
-    rimin = Ltot_norms.index(rmini)
-    if rimin > len(rnorms_end):
-        rimin_final = rimin - len(rnorms_end)
-    else:
-        rimin_final = rimin
-
-    points_RICA = points_RICAMCA[:rimin_final]
-    points_RMCA = points_RICAMCA[rimin_final:]
-
-    if rimin <= len(rnorms_end):
-        indice_RICA = geom.find_number_of_steps(
-            points_RICA, center_RACA.get("center1")[1]
-        )
-        indice_RMCA = geom.find_number_of_steps(
-            points_RMCA, center_RACA.get("center1")[1]
-        )
-    else:
-        indice_RICA = geom.find_number_of_steps(
-            points_RICA, center_RACA.get("center2")[1]
-        )
-        indice_RMCA = geom.find_number_of_steps(
-            points_RMCA, center_RACA.get("center2")[1]
-        )
-
-    points_RICA = points_RICA[: points_RICA.shape[0] - indice_RICA]
-    points_RMCA = points_RMCA[indice_RMCA:]
-
+    points_LICA,points_LMCA=geom.bifurcation_and_radius_remove(points_LICAMCA,points_LACA,center_LACA)
+    points_RICA,points_RMCA=geom.bifurcation_and_radius_remove(points_RICAMCA,points_RACA,center_RACA)
+      
+    points_LICA,points_RICA=geom.crop_ICAs(pinfo, case, points_LICA, points_RICA)
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(111, projection="3d")
     ax.grid()
@@ -480,95 +397,138 @@ def division_A(pinfo, case, step):
     for files in filesctgr:
         if "Acom" in files:
             center_Acom = geom.get_center_radius_ulti(files, pinfo, case)
+        if "Acom_posterior" in files:
+            center_Acom_post = geom.get_center_radius_ulti(files, pinfo, case)
+        if 'ACA_A2' in files:
+            center_A2 = geom.get_center_radius_ulti(files, pinfo, case)
 
-    target = [points_Acom[0], points_Acom[points_Acom.shape[0] - 1]]
+ 
+    folder = "_segmentation"
+    pathpath = (
+        "N:/vasospasm/"
+        + pinfo
+        + "/"
+        + case
+        + "/1-geometry/"
+        + pinfo
+        + "_"
+        + case
+        + folder
+        + "/paths"
+    )
 
-    Lnorms_start = []
-    Lnorms_end = []
-    for i in range(points_LACA.shape[0]):
-        lnorm_start = np.linalg.norm(target[0] - points_LACA[i])
-        lnorm_end = np.linalg.norm(target[1] - points_LACA[i])
+    os.chdir(pathpath)
+    onlyfiles = []
+    for file in glob.glob("*.pth"):
+        onlyfiles.append(file)
+    for files in onlyfiles:
+        if "_ACA_A1" in files:
+            points_ACA_Acom = geom.get_spline_points(files, step)
+            division_case='divided_acom'
+            side_change=files[0]
+            if side_change=='L':
+                other_side='R'
+            else:
+                other_side='L'
+            print(other_side)
+            for subfile in onlyfiles:
+                if 'ACA_A2' in subfile:
+                    points_ACA_A2 = geom.get_spline_points(subfile, step)
+                    
+                if other_side + '_ACA' in subfile:
+                    points_other_ACA = geom.get_spline_points(subfile, step)
+                if 'Acom_posterior' in subfile:
+                    points_Acom_post=geom.get_spline_points(subfile,step)
+                
+        if 'L_ACA' in files:
+            if len(files)==9:
+                division_case='regular'
+                for subfiles in onlyfiles:
+                    if "Acom" in subfiles:
+                        points_Acom = geom.get_spline_points(subfiles, step)
+                    if "L_ACA" in subfiles:
+                        points_LACA = geom.get_spline_points(subfiles, step)
+                    if "R_ACA" in subfiles:
+                        points_RACA = geom.get_spline_points(subfiles, step)
+    
+    for files in onlyfiles:
+        if 'L_ICA_MCA' in files:
+            points_LICA_MCA=geom.get_spline_points(files,step)
+        if 'R_ICA_MCA' in files:
+            points_RICA_MCA=geom.get_spline_points(files,step)
+        
+    print(division_case)
 
-        Lnorms_start.append(lnorm_start)
-        Lnorms_end.append(lnorm_end)
-    Lnorms_tot = Lnorms_end + Lnorms_start
-
-    lmini = np.min(Lnorms_tot)
-    limin = Lnorms_tot.index(lmini)
-    if limin > len(Lnorms_end):
-        limin_final = limin - len(Lnorms_end)
-    else:
-        limin_final = limin
-
-    points_LA1 = points_LACA[:limin_final]
-    points_LA2 = points_LACA[limin_final:]
-
-    # REMOVE THE RAIDUS OF THE INTESECTING VESSEL
-
-    if limin <= len(Lnorms_end):
-        indice_LA1 = geom.find_number_of_steps(
-            points_LA1, center_Acom.get("center1")[1]
-        )
-        indice_LA2 = geom.find_number_of_steps(
-            points_LA2, center_Acom.get("center1")[1]
-        )
-    else:
-        indice_LA1 = geom.find_number_of_steps(
-            points_LA1, center_Acom.get("center2")[1]
-        )
-        indice_LA2 = geom.find_number_of_steps(
-            points_LA2, center_Acom.get("center2")[1]
-        )
-
-    points_LA1 = points_LA1[: points_LA1.shape[0] - indice_LA1]
-    points_LA2 = points_LA2[indice_LA1:]
-
-    Rnorms_start = []
-    Rnorms_end = []
-    for i in range(points_RACA.shape[0]):
-        lnorm_start = np.linalg.norm(target[0] - points_RACA[i])
-        lnorm_end = np.linalg.norm(target[1] - points_RACA[i])
-
-        Rnorms_start.append(lnorm_start)
-        Rnorms_end.append(lnorm_end)
-    Rnorms_tot = Rnorms_end + Rnorms_start
-
-    rmini = np.min(Rnorms_tot)
-    rimin = Rnorms_tot.index(rmini)
-
-    if rimin > len(Rnorms_end):
-        rimin_final = rimin - len(Rnorms_end)
-    else:
-        rimin_final = rimin
-
-    points_RA1 = points_RACA[:rimin_final]
-    points_RA2 = points_RACA[rimin_final:]
-
-    # REMOVE THE RADIUS OF THE INTERSECTING VESSEL
-
-    if rimin <= len(Rnorms_end):
-        indice_RA1 = geom.find_number_of_steps(
-            points_RA1, center_Acom.get("center1")[1]
-        )
-        indice_RA2 = geom.find_number_of_steps(
-            points_RA2, center_Acom.get("center1")[1]
-        )
-    else:
-        indice_RA1 = geom.find_number_of_steps(
-            points_RA1, center_Acom.get("center2")[1]
-        )
-        indice_RA2 = geom.find_number_of_steps(
-            points_RA2, center_Acom.get("center2")[1]
-        )
-
-    points_RA1 = points_RA1[: points_RA1.shape[0] - indice_RA1]
-    points_RA2 = points_RA2[indice_RA2:]
+    if division_case=='divided_acom':
+        
+    # STEP 1 : points ACA
+        #Left side
+        L_dir_Ls=np.min([np.linalg.norm(points_ACA_Acom[0]-x) for x in points_LICA_MCA])
+        L_dir_Le=np.min([np.linalg.norm(points_ACA_Acom[points_ACA_Acom.shape[0]-1]-x) for x in points_LICA_MCA])
+           
+        if L_dir_Le < L_dir_Ls:
+            print("ACA A1 inverted")
+            points_ACA_Acom=points_ACA_Acom[::-1]
+        
+        L_dir_Ls2=np.min([np.linalg.norm(points_ACA_A2[0]-x) for x in points_ACA_Acom])
+        L_dir_Le2=np.min([np.linalg.norm(points_ACA_A2[points_ACA_A2.shape[0]-1]-x) for x in points_ACA_Acom])
+           
+        
+        if L_dir_Le2 < L_dir_Ls2:
+            print("ACA A2 inverted")
+            points_ACA_A2=points_ACA_A2[::-1]
+        
+        # Right side
+        L_dir_Rs=np.min([np.linalg.norm(points_other_ACA[0]-x) for x in points_RICA_MCA])
+        L_dir_Re=np.min([np.linalg.norm(points_other_ACA[points_other_ACA.shape[0]-1]-x) for x in points_RICA_MCA])
+    
+        if L_dir_Re < L_dir_Rs:
+            print("right ACA inverted")
+            points_RACA=points_RACA[::-1]
+            
+      
+             
+        points_LA1=points_ACA_Acom
+        points_LA2=points_ACA_A2
+        
+        points_RA1,points_RA2=geom.bifurcation_and_radius_remove(points_other_ACA, points_Acom_post,center_Acom_post)
+        
+        
+       
+    elif division_case=='regular':
+        
+        
+        L_dir_Ls=np.min([np.linalg.norm(points_LACA[0]-x) for x in points_LICA_MCA])
+        L_dir_Le=np.min([np.linalg.norm(points_LACA[points_LACA.shape[0]-1]-x) for x in points_LICA_MCA])
+          
+        if L_dir_Le < L_dir_Ls:
+           print("ACA inverted")
+           points_LACA=points_LACA[::-1]
+           
+        L_dir_Rs=np.min([np.linalg.norm(points_RACA[0]-x) for x in points_RICA_MCA])
+        L_dir_Re=np.min([np.linalg.norm(points_RACA[points_RACA.shape[0]-1]-x) for x in points_RICA_MCA])
+    
+        if L_dir_Re < L_dir_Rs:
+            print("right ACA inverted")
+            points_RACA=points_RACA[::-1]
+          
+        points_LA1,points_LA2=geom.bifurcation_and_radius_remove(points_LACA, points_Acom, center_Acom)
+          
+        points_RA1,points_RA2=geom.bifurcation_and_radius_remove(points_RACA, points_Acom,center_Acom)
+        
 
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(111, projection="3d")
     ax.grid()
-
-    ax.scatter(points_Acom[:, 0], points_Acom[:, 1], points_Acom[:, 2], label="Acom")
+    if division_case=='divided_acom':
+        
+        ax.scatter(
+            points_Acom_post[:, 0], points_Acom_post[:, 1], points_Acom_post[:, 2], c="k", label="Acom"
+        )
+    if division_case=='regular':
+        ax.scatter(
+            points_Acom[:, 0], points_Acom[:, 1], points_Acom[:, 2], c="k", label="Acom"
+        )
     ax.scatter(
         points_RA1[:, 0], points_RA1[:, 1], points_RA1[:, 2], label="RIGHT ACA A1"
     )
@@ -582,7 +542,7 @@ def division_A(pinfo, case, step):
         points_LA2[:, 0], points_LA2[:, 1], points_LA2[:, 2], label="LEFT ACA A2"
     )
 
-    ax.view_init(30, 90)
+    ax.view_init(30,60)
     ax.legend()
     plt.show()
 
@@ -679,53 +639,8 @@ def new_division_P_bas(pinfo, case, step):
                 if "Pcom_PCA" in subfile:
                     points_otherside = geom.get_spline_points(subfile, step)
 
-            target = [points_target[0], points_target[points_target.shape[0] - 1]]
-            lnorms_end = []
-            lnorms_start = []
-
-            for i in range(points_bas_pca.shape[0]):
-                # Norm between first/last  LACA points and LICAMCA points
-                norm_end = np.linalg.norm(target[1] - points_bas_pca[i])
-                norm_start = np.linalg.norm(target[0] - points_bas_pca[i])
-                lnorms_end.append(norm_end)
-                lnorms_start.append(norm_start)
-            # Min of the two lists
-            Ltot_norms = lnorms_end + lnorms_start
-
-            lmini = np.min(Ltot_norms)
-            limin = Ltot_norms.index(lmini)
-            if limin > len(lnorms_end):
-                limin_final = limin - len(lnorms_end)
-            else:
-                limin_final = limin
-
-            # DIVISION BAS/P1 AND P2
-
-            points_P2 = points_bas_pca[limin_final:]
-            points_basP1 = points_bas_pca[:limin_final]
-
-            # REMOVE A RADIUS OF THE INTERSECTING VESSEL
-
-            if limin <= len(lnorms_end):
-                indice_basP1 = geom.find_number_of_steps(
-                    points_basP1, center_pcom.get("center1")[1]
-                )
-                indice_P2 = geom.find_number_of_steps(
-                    points_P2, center_pcom.get("center1")[1]
-                )
-
-            else:
-                indice_basP1 = geom.find_number_of_steps(
-                    points_basP1, center_pcom.get("center2")[1]
-                )
-                indice_P2 = geom.find_number_of_steps(
-                    points_P2, center_pcom.get("center2")[1]
-                )
-
-            print(indice_P2)
-            print(indice_basP1)
-            points_P2 = points_P2[indice_P2:]
-            points_basP1 = points_basP1[: points_basP1.shape[0] - indice_basP1]
+            
+            points_basP1,points_P2=geom.bifurcation_and_radius_remove(points_bas_pca, points_target, center_pcom)
 
             # DIVISION BAS & P1
 

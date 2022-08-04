@@ -81,7 +81,7 @@ import geometry_slice as geom
 #     return points
 
 
-def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints):
+def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case):
     # Change name function?
     """
 
@@ -99,7 +99,7 @@ def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints):
     ddist = {}
     dvectors = {}
     onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle)
-
+    print(indices_dat[i_dat])
     # Inverse the order of the points if the pressure is not decreasing
 
     if (
@@ -699,7 +699,7 @@ def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
     plt.xlabel("distance along the vessel (m)", fontsize=18)
     plt.ylabel("Pressure", fontsize=18)
     plt.title(
-        "Pressure along the " + ddist.get("dist{}".format(i_vessel))[0], fontsize=20
+        "Pressure along the " + dpoints_u.get("points{}".format(i_vessel))[0], fontsize=20
     )
     plt.legend(loc="best")
 
@@ -709,6 +709,7 @@ def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
 
 
 def save_pressure(data_file,i, dpoints, dvectors):
+    
     """
 
 
@@ -792,49 +793,68 @@ def plot_on_time(dpressure, i_vessel, pinfo):
     plt.show()
 
 
-def plot_time_dispersion(dpressure, i_vessel, pinfo):
+def plot_time_dispersion(dpressure, i_vessel, pinfo,case):
 
     Ldist = []
 
     onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
+    print(indices)
     len_vessel = (
         dpressure.get("{}".format(indices[0]))
-        .get("pressure{}".format(i_vessel))[1]
+        .get("pressure{}".format(i_vessel))[1][1]
         .shape[1]
     )
     name_vessel = dpressure.get("{}".format(indices[0])).get(
         "pressure{}".format(i_vessel)
     )[0]
+    
+    variation = get_variation(pinfo, case)
+
+    os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
+    module_name = "division_variation" + str(variation)
+    module = importlib.import_module(module_name)
+
+    importlib.reload(module)
+    importlib.reload(geom)
+    dpoints_u, dvectors_u = module._main_(pinfo, case, step)
+
+   
+    
+    ddist = {}
+    
+    ddist = get_distance_along(
+            i_vessel, 0, dpressure, dvectors_u, dpoints_u,pinfo,case
+        )
+    
 
     dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
         Ldist.append(float((dist[i] + dist[i + 1]) / 2))
 
     tab_pressure = np.zeros((len_vessel, 3))
-
+    len_cycle=30
     for i in range(len_vessel):
-        Lmin = [
-            dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
-                1
-            ][0, i]
-            for k in range(len(onlydat) - 1)
+       Lmin = [
+           dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[1][1][0, i]
+            for k in range(len_cycle)
         ]
-        Lmean = [
+       
+       Lmean = [
             dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
                 1
-            ][1, i]
-            for k in range(len(onlydat) - 1)
+            ][1][1, i]
+            for k in range(len_cycle)
         ]
-        Lmax = [
+       Lmax = [
             dpressure.get("{}".format(indices[k])).get("pressure{}".format(i_vessel))[
                 1
-            ][2, i]
-            for k in range(len(onlydat) - 1)
+            ][1][2, i]
+            for k in range(len_cycle)
         ]
 
-        tab_pressure[i, 0] = sum(Lmin) / len(Lmin)
-        tab_pressure[i, 1] = sum(Lmean) / len(Lmean)
-        tab_pressure[i, 2] = sum(Lmax) / len(Lmax)
+       tab_pressure[i, 0] = sum(Lmin) / len(Lmin)
+       tab_pressure[i, 1] = sum(Lmean) / len(Lmean)
+       tab_pressure[i, 2] = sum(Lmax) / len(Lmax)
 
     fig = plt.figure(figsize=(14.4, 10.8))
 
@@ -857,7 +877,7 @@ def plot_time_dispersion(dpressure, i_vessel, pinfo):
     plt.legend(loc="best")
 
     plt.savefig(
-        "N:/vasospasm/pressure_pytec_scripts/plots_avg/"
+        "N:/vasospasm/pressure_pytec_scripts/plots_resistance/"
         + pinfo
         + "_"
         + case
@@ -912,6 +932,25 @@ def plot_R(dpressure, i_vessel, pinfo, case):
     name_vessel = dpressure.get("{}".format(indices[0])).get(
         "pressure{}".format(i_vessel)
     )[0]
+    
+    variation = get_variation(pinfo, case)
+
+    os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
+    module_name = "division_variation" + str(variation)
+    module = importlib.import_module(module_name)
+
+    importlib.reload(module)
+    importlib.reload(geom)
+    dpoints_u, dvectors_u = module._main_(pinfo, case, step)
+
+   
+    
+    ddist = {}
+    
+    ddist = get_distance_along(
+            i_vessel, 0, dpressure, dvectors_u, dpoints_u,pinfo,case
+        )
+    print(ddist)
 
     dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
@@ -957,10 +996,10 @@ def plot_R(dpressure, i_vessel, pinfo, case):
 
     plt.plot(Ldist[:-1], tab_resist_locale[:, 1], label="local resistance")
 
-    plt.plot(Ldist[1:], tab_resistance[1:, 1], "--")
-    plt.plot(
-        Ldist[1:], tab_resistance[1:, 1], "o", label="Average resistance over time"
-    )
+    # plt.plot(Ldist[1:], tab_resistance[1:, 1], "--")
+    # plt.plot(
+    #     Ldist[1:], tab_resistance[1:, 1], "o", label="Average resistance over time"
+    # )
     # plt.fill_between(Ldist,
     #                  tab_resistance[:,
     #                                 0],
@@ -976,7 +1015,7 @@ def plot_R(dpressure, i_vessel, pinfo, case):
     plt.legend(loc="best")
 
     plt.savefig(
-        "N:/vasospasm/pressure_pytec_scripts/plots_avg/"
+        "N:/vasospasm/pressure_pytec_scripts/plots_resistance/test/"
         + pinfo
         + "_"
         + case
@@ -1193,12 +1232,12 @@ def main():
             ddist = {}
             for k in range(len(dpoints_u)):
                 ddist["{}".format(k)] = get_distance_along(
-                    k, i, dpressure, dvectors_u, dpoints_u
+                    k, i, dpressure, dvectors_u, dpoints_u,pinfo,case
                 )
 
         else:
             i_vessel = int(select_vessel)
-            ddist = get_distance_along(i_vessel, i, dpressure, dvectors_u, dpoints_u)
+            ddist = get_distance_along(i_vessel, i, dpressure, dvectors_u, dpoints_u,pinfo,case)
 
         if select_vessel == "a":
             for k in range(len(dpoints_u)):
@@ -1251,7 +1290,7 @@ def main():
     return dpressure
 
 if __name__=="__main__":
-    main()
+    dpressure_ra2_vas = main()
     
     
 
