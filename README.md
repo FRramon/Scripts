@@ -76,7 +76,20 @@ This is a feature to prevent to slice through two vessels at a time at a bifurca
 
 ![separation_ica_aca_update](https://user-images.githubusercontent.com/109392345/182442252-4c4e00e2-2c40-4b47-a963-46d48ebea42d.png)
 
-        
+## Results illustrations
+
+#### For patient 2 - baseline vs vasospasm case. Representation of the pressure along the vessel, averaged on time
+
+![pt2_baseline_L_MCA (1)](https://user-images.githubusercontent.com/109392345/182961087-9c1b584c-dee1-48d8-bfd4-c7d40f868c8b.png)
+
+![pt2_vasospasm_L_MCA (1)](https://user-images.githubusercontent.com/109392345/182961116-5e461df0-7ef4-4c81-9dbf-c29e538001a5.png)
+
+#### For patient 2 - baseline vs vasospasm case. Representation of the resistance along the vessel, averaged on time
+
+![pt2_baseline_L_MCA](https://user-images.githubusercontent.com/109392345/182961330-454aafbb-4db5-4976-8a99-73ceb778064a.png)
+
+![pt2_vasospasm_L_MCA_3](https://user-images.githubusercontent.com/109392345/182961356-0d1992da-dc73-4f95-9e05-67c4d198e76e.png)
+
         
 ## Useful information
 
