@@ -114,8 +114,8 @@ def division_ICA(pinfo, case, step):
             
     points_LICA,points_LMCA=geom.bifurcation_and_radius_remove(points_LICAMCA,points_LACA,center_LACA)
     points_RICA,points_RMCA=geom.bifurcation_and_radius_remove(points_RICAMCA,points_RACA,center_RACA)
-
     
+    points_LICA,points_RICA=geom.crop_ICAs(pinfo, case, points_LICA, points_RICA)
 
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_subplot(111, projection="3d")
@@ -556,12 +556,20 @@ def division_PCA(pinfo, case, step):
                 points_bas_Pcom[:, 2],
                 label=" basilar side Pcom",
             )
-            # ax.scatter(
-            #     points_Pcom[:, 0],
-            #     points_Pcom[:, 1],
-            #     points_Pcom[:, 2],
-            #     label="non basilar side Pcom",
-            # )
+            if division_case=='regular':
+                ax.scatter(
+                    points_Pcom[:, 0],
+                    points_Pcom[:, 1],
+                    points_Pcom[:, 2],
+                    label="non basilar side Pcom",
+            )
+            if division_case=='nb_divided':
+                ax.scatter(
+                    points_non_bas_Pcom[:, 0],
+                    points_non_bas_Pcom[:, 1],
+                    points_non_bas_Pcom[:, 2],
+                    label="non basilar side Pcom",
+             )
             ax.scatter(
                 points_bas_P1[:, 0],
                 points_bas_P1[:, 1],

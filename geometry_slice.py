@@ -155,10 +155,8 @@ def create_dpoint(pinfo, case, step):
 
     """
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
+   
+    folder = "_segmentation"
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -288,6 +286,57 @@ def find_radius(center, coord_center):
 # Ideally want to remove a radius of the vessel which make the intersection (ex pcom in pca -> p1 & p2)
 
 
+
+
+
+
+def crop_ICAs(pinfo,case,points_LICA,points_RICA):
+    
+    os.chdir('N:/vasospasm/' + pinfo + '/' + case+ '/1-geometry')
+    
+    if 'tica_l.dat' in glob.glob('*.dat'):
+        
+    
+    
+        Sides=['L','R']
+        POINTS= []
+        for side in Sides:
+            if side=='L':
+                points=points_LICA
+                filename='tica_l.dat'
+                # sep_point=np.array([-0.003168023657053709, -0.03868599608540535, -0.4955081045627594])
+                
+            elif side=='R':
+                points=points_RICA
+                filename='tica_r.dat'
+    
+                # sep_point=np.array([-0.024270353838801384, -0.036143455654382706, -0.491994708776474])
+                
+           
+            f = open('N:/vasospasm/' + pinfo + '/' + case+ '/1-geometry/' + filename)
+            data = np.loadtxt(f,
+                          dtype=str,
+                          usecols=(0,1,2),
+                          delimiter=' ')
+        
+            L_coord=[float(x) for x in data[1,:]]
+            sep_point=np.array(L_coord)
+            
+            points_ant,points_sup=bifurcation_one(points,sep_point)
+            
+            POINTS.append(points_sup)
+    
+    
+        return POINTS[0],POINTS[1]
+    
+    else:
+        return points_LICA,points_RICA
+    
+    
+
+
+
+
 def calculate_norms(vectors):
     """
 
@@ -406,6 +455,32 @@ def bifurcation(points_to_divide,points_bifurc):
     
 
     return points_1, points_2,case_center
+
+
+def bifurcation_one(points_to_divide,coord_bifurc):
+    
+    nb_norms_start = []
+   
+    for i in range(points_to_divide.shape[0]):
+        norm_start = np.linalg.norm(coord_bifurc - points_to_divide[i])
+      
+
+        nb_norms_start.append(norm_start)
+       
+    lmini = np.min(nb_norms_start)
+    limin =nb_norms_start.index(lmini)
+  
+
+    points_1 = points_to_divide[:limin]
+    points_2 = points_to_divide[limin:]
+    
+    # if limin<len(nb_norms_end):
+    #     case_center=1
+    # else:
+    #     case_center=2
+    
+
+    return points_1, points_2
 
 def remove_center(points_1,points_2,center_bifurc,case_center):
     

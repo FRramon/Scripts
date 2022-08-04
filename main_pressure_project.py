@@ -41,7 +41,7 @@ from tqdm import tqdm
 
 # %% Scripts as modules
 
-os.chdir("N:/vasospasm/pressure_pytec_scripts")
+os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
 
 import geometry_slice as geom
 
@@ -175,7 +175,7 @@ def get_list_files_dat(pinfo, case, num_cycle):
 
     for i in range(len(indices)):
         newpath = (
-            "N:/vasospasm/pressure_pytec_scripts/plots_c/"
+            "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
             + pinfo
             + "/"
             + case
@@ -421,7 +421,7 @@ def get_origin(dpoints_i, dvectors_i, i_vessel, data_file_baseline):
     return array_points[1]
 
 
-def data_coor(data_file):
+def data_coor(data_file,pinfo,case):
     """
 
 
@@ -451,7 +451,7 @@ def data_coor(data_file):
     return coordinates_fluent
 
 
-def find_closest(origin, name):
+def find_closest(data_file,pinfo,case, origin, name):
     """
 
 
@@ -466,7 +466,7 @@ def find_closest(origin, name):
     """
 
     L = []
-    coordinates_fluent = data_coor(data_file)
+    coordinates_fluent = data_coor(data_file,pinfo,case)
     for i in range(coordinates_fluent.shape[0]):
         b = np.linalg.norm(coordinates_fluent[i, :] - origin)
         L.append(b)
@@ -512,7 +512,7 @@ def find_slice(slices, origin):
     return dict_slice, imin
 
 
-def get_pressure(origin, normal, name):
+def get_pressure(data_file,origin, normal, name):
     """
     Compute the pressure in a given slice.
     Assuming that every data that could be needed from fluent are loaded.
@@ -535,7 +535,7 @@ def get_pressure(origin, normal, name):
     slices = plot.slices(0)
     slices.show = True
 
-    origin_s = find_closest(origin, name)
+    origin_s = find_closest(data_file,pinfo,case,origin, name)
     origin_slice = (origin_s[0], origin_s[1], origin_s[2])
     normal = (normal[0], normal[1], normal[2])
 
@@ -568,7 +568,7 @@ def get_pressure(origin, normal, name):
     return min_pressure, avg_pressure, max_pressure
 
 
-def compute_along(i_vessel, dpoints, dvectors):
+def compute_along(data_file,i_vessel, dpoints, dvectors):
     """
 
 
@@ -637,7 +637,7 @@ def compute_along(i_vessel, dpoints, dvectors):
             origin = points[j, :]
             normal = vectors[j, :]
             min_pressure, avg_pressure, max_pressure = get_pressure(
-                origin, normal, name
+                data_file,origin, normal, name
             )
             print("   $$ Control point ", j, " : Pressure = ", avg_pressure)
             Lmin.append(min_pressure)
@@ -708,7 +708,7 @@ def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
     return fig
 
 
-def save_pressure(i, dpoints, dvectors):
+def save_pressure(data_file,i, dpoints, dvectors):
     """
 
 
@@ -723,7 +723,7 @@ def save_pressure(i, dpoints, dvectors):
     """
     dpressure = {}
     # dpressure['Informations']=pinfo,case,filename
-    Lpress = compute_along(i, dpoints, dvectors)
+    Lpress = compute_along(data_file,i, dpoints, dvectors)
 
     pressure_array = invert_array(np.array(Lpress))
     name = dpoints.get("points{}".format(i))[0]
@@ -732,7 +732,7 @@ def save_pressure(i, dpoints, dvectors):
     return dpressure
 
 
-def save_pressure_all(dpoints, dvectors):
+def save_pressure_all(data_file,dpoints, dvectors):
     """
 
 
@@ -743,7 +743,8 @@ def save_pressure_all(dpoints, dvectors):
     """
     dpressure = {}
     for i in range(len(dpoints)):
-        pressure_array = invert_array(np.array(compute_along(i, dpoints, dvectors)[0]))
+        Lpress = compute_along(data_file,i, dpoints, dvectors)
+        pressure_array = invert_array(np.array(Lpress))
         name = dpoints.get("points{}".format(i))[0]
         dpressure["pressure{}".format(i)] = name, pressure_array
 
@@ -1038,11 +1039,12 @@ def main():
     global pinfo
     global case
     global num_cycle
+    global step
+
     global select_file
     global filename
     global data_file
     global ddist
-    global step
     print("$ Patient informations $\n")
     ptype = input("Patient origin? -- v : vsp## or p: pt## --\n")
     if ptype == "v":
@@ -1068,7 +1070,8 @@ def main():
     select_file = input("which time step?\n")
 
     print("$ Step $\n")
-    step = int(input())
+    step_in = input()
+    step=int(step_in)
 
     # Load a different module of the control points extraction and sorting depending on the patient variation
 
@@ -1082,64 +1085,7 @@ def main():
     importlib.reload(geom)
     dpoints_u, dvectors_u = module._main_(pinfo, case, step)
 
-    # return dpoints,dvectors
-
-    # Load baseline.dat to compare points with outlet, and update the
-    # dictionaries
-
-    # print(
-    #     ' ############  Step 1 : First Connection to Tecplot  ############ Initializing data : Final Geometry and distances along the vessels \n')
-
-    # filename = pinfo + '_' + case + '.dat'
-    # logging.basicConfig(level=logging.DEBUG)
-
-    # # Run this script with "-c" to connect to Tecplot 360 on port 7600
-    # # To enable connections in Tecplot 360, click on:
-    # #   "Scripting" -> "PyTecplot Connections..." -> "Accept connections"
-
-    # tp.session.connect()
-    # tp.new_layout()
-    # frame = tp.active_frame()
-
-    # dir_file = 'N:/vasospasm/' + pinfo + '/' + case+ \
-    #     '/3-computational/hyak_submit/' + filename
-
-    # data_file_baseline = tp.data.load_fluent(
-    #     case_filenames=[
-    #         'N:/vasospasm/' +
-    #         pinfo +
-    #         '/' +
-    #         case+
-    #         '/3-computational/hyak_submit/' +
-    #         pinfo +
-    #         '_' +
-    #         case+
-    #         '.cas'],
-    #     data_filenames=[dir_file])
-
-    # dpoints_u = {}
-    # dvectors_u = {}
-    # dnorms_u = {}
-
-    # for l in tqdm(range(len(dpoints))):
-    #     dpoints_u['points{}'.format(l)] = dpoints.get('points{}'.format(l))[
-    #         0], get_origin(dpoints, dvectors, l, data_file_baseline)
-    #     dvectors_u['vectors{}'.format(l)] = dpoints.get('points{}'.format(l))[
-    #         0], calculate_normal_vectors(get_origin(dpoints, dvectors, l, data_file_baseline))
-    #     dnorms_u['norms{}'.format(l)] = dpoints.get('points{}'.format(l))[
-    #         0], calculate_norms(dvectors_u.get('vectors{}'.format(l))[1])
-
-    # #ddist = get_distance_along(dvectors_u)
-
-    # Lnorm = []
-    # for l in tqdm(range(len(dpoints))):
-    #     Lnorm.append(np.mean(dnorms_u.get('norms{}'.format(l))[1]))
-
-    # print('\n')
-
-    # definition = sum(Lnorm) / len(Lnorm)
-
-    # print('spatial step (m) : ', definition, '\n')
+   
 
     for k in range(len(dpoints_u)):
         print(k, " : " + dpoints_u.get("points{}".format(k))[0])
@@ -1229,14 +1175,14 @@ def main():
 
         if select_vessel == "a":
             dpressure["{}".format(indices_dat[i])] = save_pressure_all(
-                dpoints_u, dvectors_u
+                data_file,dpoints_u, dvectors_u
             )
             dname = "".join(["dpressure", "_", pinfo, "_", case])
             save_dict(dpressure, "N:/vasospasm/pressure_pytec_scripts/" + dname)
 
         else:
             i_ = int(select_vessel)
-            dpress = save_pressure(i_, dpoints_u, dvectors_u)
+            dpress = save_pressure(data_file,i_, dpoints_u, dvectors_u)
             dpressure["{}".format(indices_dat[i])] = dpress
             save_dict(
                 dpressure,
@@ -1262,7 +1208,7 @@ def main():
                 dist = ddist.get("{}".format(k)).get("dist{}".format(k))[1]
                 fig = plot_linear(k, Lpress, dpoints_u, dvectors_u, dist)
                 fig.savefig(
-                    "N:/vasospasm/pressure_pytec_scripts/plots_c/"
+                    "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
                     + pinfo
                     + "/"
                     + case
@@ -1286,7 +1232,7 @@ def main():
             print("dist :", dist)
             fig = plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist)
             fig.savefig(
-                "N:/vasospasm/pressure_pytec_scripts/plots_c/"
+                "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
                 + pinfo
                 + "/"
                 + case
@@ -1300,6 +1246,13 @@ def main():
                 + ".png"
             )
 
-    # plot_R(dpressure,i_vessel,pinfo,case)
+    #plot_R(dpressure,i_vessel,pinfo,case)
 
     return dpressure
+
+if __name__=="__main__":
+    main()
+    
+    
+
+
