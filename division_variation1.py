@@ -788,7 +788,7 @@ def createfinal_dicts(dpoint_i, indices):
 
 def _main_(pinfo, case, step):
 
-    dpoint_i = create_dpoint(pinfo, case, step)
+    dpoint_i = geom.create_dpoint(pinfo, case, step)
 
     # Step 2# Divide the Arteries
 
