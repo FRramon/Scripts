@@ -399,8 +399,7 @@ def bifurcation_and_radius_remove(points_to_divide,points_bifurc,center_bifurc):
     points_1 = points_to_divide[:limin_final]
     points_2 = points_to_divide[limin_final:]
     
-    print('points_1 : ',points_1)
-    print('points_2 : ', points_2)
+  
         
     if limin <= len(nb_norms_end):
         indice_1 = find_number_of_steps(

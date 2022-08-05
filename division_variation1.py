@@ -213,10 +213,7 @@ def division_ACA(pinfo, case, step):
         if 'ACA_A2' in files:
             center_A2 = geom.get_center_radius_ulti(files, pinfo, case)
 
-            
-
-
-
+        
 
     folder = "_segmentation"
     pathpath = (
@@ -317,8 +314,8 @@ def division_ACA(pinfo, case, step):
         L_dir_Le=np.min([np.linalg.norm(points_LACA[points_LACA.shape[0]-1]-x) for x in points_LICA_MCA])
           
         if L_dir_Le < L_dir_Ls:
-           print("ACA inverted")
-           points_LACA=points_LACA[::-1]
+            print("ACA inverted")
+            points_LACA=points_LACA[::-1]
            
         L_dir_Rs=np.min([np.linalg.norm(points_RACA[0]-x) for x in points_RICA_MCA])
         L_dir_Re=np.min([np.linalg.norm(points_RACA[points_RACA.shape[0]-1]-x) for x in points_RICA_MCA])
