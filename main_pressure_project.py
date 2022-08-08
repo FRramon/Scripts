@@ -233,6 +233,12 @@ def get_variation(pinfo, case):
         "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/case_info.mat"
     )
     variation = int(dinfo.get("variation_input"))
+    if (variation==3) or (variation==4):
+        variation = 4
+    elif (variation==5) or (variation==6):
+        variation = 5
+    elif (variation==7) or (variation==8):
+        variation = 7
 
     return variation
 
@@ -1035,55 +1041,55 @@ def main():
     """
 
     The object of this script is to compute and plot the pressure along the vessels
-    of the circle of Willis of a specific patient for certain points.
+    of the circle of Willis of a specific patient for certain points. The methode used is to create slice and extract them into tecplot to get the pressure along.
 
 
 
     This program
         --> Step 1 : Extract files and coordinates, label names. All in a dictionnary
 
-        --> Step 2: Operate a divison for ICA_MCA --> ICA & MCA, PCA --> P1 & P2 and ACA --> A1 & A2.
+        --> Step 2 : Organize the 'raw' data into clear division of the vessels. Automatically if it is a complete CoW, with some manual input otherwise.
+                    The division_variation_{i} scripts make the separation of :
+                        - L/_ICA_MCA into L/R_ICA & L/R_MCA
+                        - PCA into P1 and P2
+                        - BAS_PCA into BAS & P1 & P2
+                        - ACA into A1 & A2
+                    The script also defines a direction for certain vessels : 
+                        For the ACAs, the starting point is at the intersection with the ICA
+                        For the PCA, the starting point is at the intersection with the basilar artery.
+                    At each bifurcation that occur in the first step, a half radius of the intersecting vessel is remove at each side of the other vessel
+                    in the bifurcation. This is to prevent error during the slicing process.
 
-    These division are made automatically if there is the right vessel to make the separation :
-        - ACA for the ICA_MCA
-        - Pcom for the PCA
-        - Acom for the ACA
-    The separation is made finding the closest point of the unsparated vessel from
-    the first/last point of the vessel used to do the separation, by minimazing the euclidian distances.
-
-    If there is a vessel missing, the separation is made manually by the user, which enter the coordinates
-    of the separation point.
-
-        --> Step 3 : Add the divided ones in coordinates dictionnary, and remove the ICA_MCA/PCA/ACAs
-
-        --> Step 4 : Compute the vectors dictionnary
-
-    This is just made by substracting the coordinates of the points terms to terms.
+        --> Step 3 : Compute the dictionary of the normal vectors from the new control points
 
         --> Step 5 : Compute pressure with tecplot
 
-            Step 5.1 : Selecting the good case (patient, case, num_cycle, .dat file), and load data into Tecplot
-            Step 5.2 : Find the list of the closest points in fluent to the control points.
-            Step 5.3 : Make a slice for each control point and normal vector
-            Step 5.4 : Find the subslice that correspond to the vessel in which one is interested
-            Step 5.5 : Compute the average pressure in the subslice
-            Step 5.6 : Save the pressures in a dictionnary,containing every cycle/.dat file/ vessel.
-            Step 5.7 : change the order of the vessel if necessary to have a decreasing plot of pressure
+                Step 5.1 : Selecting the good case (patient, case, num_cycle, .dat file), and load data into Tecplot
+                Step 5.2 : Find the list of the closest points in fluent to the control points.
+                Step 5.3 : Make a slice for each control point and normal vector
+                Step 5.4 : Find the subslice that correspond to the vessel in which one is interested
+                Step 5.5 : Compute the min, max and average pressure in the subslice
+                Step 5.6 : Save the pressures in a dictionnary,containing every cycle/.dat file/ vessel.
+                Step 5.7 : change the order of the vessel if necessary to have a decreasing plot of pressure
+                
         --> Step 6 : Plot pressure in each vessel
 
-            Step 7 : extract flowrate, compute delta_P, and plot time average resistance along the segments.
+            Step 7 : extract flowrate, compute delta_P = P_{i+1} - P_{i}, and plot time average resistance along the segments.
 
     """
+    
+    # Still a few global variables. 
 
     global pinfo
     global case
     global num_cycle
     global step
-
     global select_file
     global filename
     global data_file
-    global ddist
+    
+    ######################################### Choosing the patient informations
+  
     print("$ Patient informations $\n")
     ptype = input("Patient origin? -- v : vsp## or p: pt## --\n")
     if ptype == "v":
@@ -1101,7 +1107,7 @@ def main():
     print("$ Select computing cases\n")
     num_cycle = int(input("Which cycle ? 1,2,3 or 4\n"))
 
-    onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle)
+    onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle) # Get the dat files for the patient and its case
 
     for k in range(len(onlydat)):
         print(k, ": " + indices_dat[k][9:-3] + ":" + indices_dat[k][11:] + " s")
@@ -1114,7 +1120,7 @@ def main():
 
     # Load a different module of the control points extraction and sorting depending on the patient variation
 
-    variation = get_variation(pinfo, case)
+    variation = get_variation(pinfo, case) # Get the variation from the case_info.mat
 
     os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
     module_name = "division_variation" + str(variation)
@@ -1122,8 +1128,9 @@ def main():
 
     importlib.reload(module)
     importlib.reload(geom)
-    dpoints_u, dvectors_u = module._main_(pinfo, case, step)
+    dpoints_u, dvectors_u = module._main_(pinfo, case, step) # Extract the control points, well organized and divided
 
+    
    
 
     for k in range(len(dpoints_u)):
@@ -1287,10 +1294,12 @@ def main():
 
     #plot_R(dpressure,i_vessel,pinfo,case)
 
-    return dpressure
+    return dpressure,ddist
 
 if __name__=="__main__":
-    dpressure_ra2_vas = main()
+    dpressure_ra2_vas,ddist_ra2_vas = main()
+    
+    
     
     
 
