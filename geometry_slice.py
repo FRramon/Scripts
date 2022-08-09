@@ -575,7 +575,6 @@ def get_center_radius(fname, pinfo, case):
         + "_segmentation/Segmentations"
     )
 
-    fname = "L_ICA_MCA.ctgr"
     with open(fname) as f:
         xml = f.read()
         root = ET.fromstring(re.sub(r"(<\?xml[^>]+\?>)", r"\1<root>", xml) + "</root>")
@@ -693,3 +692,5 @@ def get_center_radius_ulti(fname, pinfo, case):
     dcenter["center{}".format(2)] = center2, radius2
 
     return dcenter
+
+
