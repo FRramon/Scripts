@@ -48,7 +48,7 @@ import geometry_slice as geom
 # %% Functions
 
 
-def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case):
+def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case,num_cycle):
     # Change name function?
     """
 
@@ -214,7 +214,7 @@ def get_variation(pinfo, case):
 
 # %% Functions Tecplot
 
-def plot_cross_section(pinfo,name):
+def plot_cross_section(pinfo,name,ax):
     
     dradius_vas={}
     dradius_bas={}
@@ -301,15 +301,12 @@ def plot_cross_section(pinfo,name):
     # Xb=np.linspace(0,len(dict_interb),len(dict_interb))
     # Xv=np.linspace(0,len(dict_interv),len(dict_interv))
 
-    plt.plot(Norms_bas_list,Array_radius_bas[:-1], label= 'radius | baseline ')
-    plt.plot(Norms_vas_list,Array_radius_vas[:-1], label = 'radius | vasospasm')
-    plt.ylabel('radius (m)')
-    plt.xlabel('Distance along the vessel')
-    plt.title("Cross section along the " + name)
-    plt.legend()
+    ax.plot(Norms_bas_list,Array_radius_bas[:-1], label= 'radius | baseline ')
+    ax.plot(Norms_vas_list,Array_radius_vas[:-1], label = 'radius | vasospasm')
+   
     
-    plt.show()
-    
+   
+    return fig
 
 
 
@@ -404,7 +401,7 @@ def find_slice(slices, origin):
     return dict_slice, imin
 
 
-def get_pressure(data_file,origin, normal, name):
+def get_pressure(data_file,origin, normal, name,pinfo,case):
     """
     Compute the pressure in a given slice.
     Assuming that every data that could be needed from fluent are loaded.
@@ -448,7 +445,7 @@ def get_pressure(data_file,origin, normal, name):
     return min_pressure, avg_pressure, max_pressure
 
 
-def compute_along(data_file,i_vessel, dpoints, dvectors):
+def compute_along(data_file,i_vessel, dpoints, dvectors,pinfo,case):
     """
 
 
@@ -490,7 +487,7 @@ def compute_along(data_file,i_vessel, dpoints, dvectors):
             origin = points[j, :]
             normal = vectors[j, :]
             min_pressure, avg_pressure, max_pressure = get_pressure(
-                data_file,origin, normal, name
+                data_file,origin, normal, name,pinfo,case
             )
             print("   $$ Control point ", j, " : Pressure = ", avg_pressure)
             Lmin.append(min_pressure)
@@ -504,6 +501,7 @@ def compute_along(data_file,i_vessel, dpoints, dvectors):
         Lpressure = np.array([L, L, L])
 
     return Lpressure
+
 
 
 def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
@@ -558,7 +556,7 @@ def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
     return fig
 
 
-def save_pressure(data_file,i, dpoints, dvectors):
+def save_pressure(data_file,i, dpoints, dvectors,pinfo,case):
     
     """
 
@@ -574,7 +572,7 @@ def save_pressure(data_file,i, dpoints, dvectors):
     """
     dpressure = {}
     # dpressure['Informations']=pinfo,case,filename
-    Lpress = compute_along(data_file,i, dpoints, dvectors)
+    Lpress = compute_along(data_file,i, dpoints, dvectors,pinfo,case)
 
     pressure_array = invert_array(np.array(Lpress))
     name = dpoints.get("points{}".format(i))[0]
@@ -583,7 +581,7 @@ def save_pressure(data_file,i, dpoints, dvectors):
     return dpressure
 
 
-def save_pressure_all(data_file,dpoints, dvectors):
+def save_pressure_all(data_file,dpoints, dvectors,pinfo,case):
     """
 
 
@@ -594,7 +592,7 @@ def save_pressure_all(data_file,dpoints, dvectors):
     """
     dpressure = {}
     for i in range(len(dpoints)):
-        Lpress = compute_along(data_file,i, dpoints, dvectors)
+        Lpress = compute_along(data_file,i, dpoints, dvectors,pinfo,case)
         pressure_array = invert_array(np.array(Lpress))
         name = dpoints.get("points{}".format(i))[0]
         dpressure["pressure{}".format(i)] = name, pressure_array
@@ -602,48 +600,48 @@ def save_pressure_all(data_file,dpoints, dvectors):
     return dpressure
 
 
-def plot_on_time(dpressure, i_vessel, pinfo):
+# def plot_on_time(dpressure, i_vessel, pinfo):
 
-    onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
-    len_vessel = (
-        dpressure.get("{}".format(indices[0]))
-        .get("pressure{}".format(i_vessel))[1]
-        .shape[0]
-    )
-    name_vessel = dpressure.get("{}".format(indices[0])).get(
-        "pressure{}".format(i_vessel)
-    )[0]
-    tabY = np.zeros((len_vessel))
-    X = np.linspace(1, len(onlydat) - 1, len(onlydat) - 1)
+#     onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
+#     len_vessel = (
+#         dpressure.get("{}".format(indices[0]))
+#         .get("pressure{}".format(i_vessel))[1]
+#         .shape[0]
+#     )
+#     name_vessel = dpressure.get("{}".format(indices[0])).get(
+#         "pressure{}".format(i_vessel)
+#     )[0]
+#     tabY = np.zeros((len_vessel))
+#     X = np.linspace(1, len(onlydat) - 1, len(onlydat) - 1)
 
-    for i in range(len_vessel):
+#     for i in range(len_vessel):
 
-        Y = [
-            dpressure.get("{}".format(indices[j])).get("pressure{}".format(i_vessel))[
-                1
-            ][i, 1]
-            for j in range(len(onlydat) - 1)
-        ]
-        # modify by taking the second line (avg)
-        plt.plot(X, Y)
-    plt.grid()
+#         Y = [
+#             dpressure.get("{}".format(indices[j])).get("pressure{}".format(i_vessel))[
+#                 1
+#             ][i, 1]
+#             for j in range(len(onlydat) - 1)
+#         ]
+#         # modify by taking the second line (avg)
+#         plt.plot(X, Y)
+#     plt.grid()
 
-    plt.xlabel("Time step")
-    plt.ylabel("Pressure")
-    plt.title("Pressure in each point in function of time in the " + name_vessel)
-    plt.savefig(
-        "N:/vasospasm/pressure_pytec_scripts/plots_time/"
-        + pinfo
-        + "_"
-        + case
-        + "_"
-        + name_vessel
-        + ".png"
-    )
-    plt.show()
+#     plt.xlabel("Time step")
+#     plt.ylabel("Pressure")
+#     plt.title("Pressure in each point in function of time in the " + name_vessel)
+#     plt.savefig(
+#         "N:/vasospasm/pressure_pytec_scripts/plots_time/"
+#         + pinfo
+#         + "_"
+#         + case
+#         + "_"
+#         + name_vessel
+#         + ".png"
+#     )
+#     plt.show()
 
 
-def plot_time_dispersion(dpressure, i_vessel, pinfo,case):
+def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
 
     Ldist = []
 
@@ -658,23 +656,23 @@ def plot_time_dispersion(dpressure, i_vessel, pinfo,case):
         "pressure{}".format(i_vessel)
     )[0]
     
-    variation = get_variation(pinfo, case)
+    # variation = get_variation(pinfo, case)
 
-    os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
-    module_name = "division_variation" + str(variation)
-    module = importlib.import_module(module_name)
+    # os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
+    # module_name = "division_variation" + str(variation)
+    # module = importlib.import_module(module_name)
 
-    importlib.reload(module)
-    importlib.reload(geom)
-    dpoints_u, dvectors_u = module._main_(pinfo, case, step)
+    # importlib.reload(module)
+    # importlib.reload(geom)
+    # dpoints_u, dvectors_u = module._main_(pinfo, case, step)
 
    
     
-    ddist = {}
+    # ddist = {}
     
-    ddist = get_distance_along(
-            i_vessel, 0, dpressure, dvectors_u, dpoints_u,pinfo,case
-        )
+    # ddist = get_distance_along(
+    #         i_vessel, 0, dpressure, dvectors_u, dpoints_u,pinfo,case
+    #     )
     
 
     dist = ddist.get("dist{}".format(i_vessel))[1]
@@ -706,37 +704,35 @@ def plot_time_dispersion(dpressure, i_vessel, pinfo,case):
        tab_pressure[i, 1] = sum(Lmean) / len(Lmean)
        tab_pressure[i, 2] = sum(Lmax) / len(Lmax)
 
-    fig = plt.figure(figsize=(14.4, 10.8))
+    # fig = plt.figure(figsize=(14.4, 10.8))
 
-    plt.plot(Ldist, tab_pressure[:, 1], "--")
-    plt.plot(Ldist, tab_pressure[:, 1], "o", label="Average pressure over time")
-    plt.fill_between(
+    ax.plot(Ldist, tab_pressure[:, 1], "-", label="Average pressure over time")
+    ax.fill_between(
         Ldist,
         tab_pressure[:, 0],
         tab_pressure[:, 2],
-        alpha=0.2,
-        label="average enveloppe of min/max pressure over time",
+        alpha=0.2
     )
 
+    # plt.grid()
+    # plt.xlabel("distance along the vessel (m)", fontsize=18)
+    # plt.ylabel("Pressure", fontsize=18)
+    # plt.title(
+    #     "Pressure along the " + ddist.get("dist{}".format(i_vessel))[0], fontsize=20
+    # )
+    # plt.legend(loc="best")
+
+    # plt.savefig(
+    #     "N:/vasospasm/pressure_pytec_scripts/plots_resistance/"
+    #     + pinfo
+    #     + "_"
+    #     + case
+    #     + "_"
+    #     + name_vessel
+    #     + ".png"
+    # )
+    # plt.show()
     plt.grid()
-    plt.xlabel("distance along the vessel (m)", fontsize=18)
-    plt.ylabel("Pressure", fontsize=18)
-    plt.title(
-        "Pressure along the " + ddist.get("dist{}".format(i_vessel))[0], fontsize=20
-    )
-    plt.legend(loc="best")
-
-    plt.savefig(
-        "N:/vasospasm/pressure_pytec_scripts/plots_resistance/"
-        + pinfo
-        + "_"
-        + case
-        + "_"
-        + name_vessel
-        + ".png"
-    )
-    plt.show()
-
     return fig
 
 
@@ -750,26 +746,47 @@ def invert_array(arr):
         return 0, arr
 
 
-def get_Q_final(pinfo, case):
+# def get_Q_final(pinfo, case, name_vessel):
+
+#     dinfo = scipy.io.loadmat(
+#         "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/case_info.mat"
+#     )
+#     Lvessel=['L_MCA','R_MCA']
+#     ind=Lvessel.index(name_vessel)
+    
+#     dqfinal = dinfo.get("Q_final")
+#     Q_arr = np.zeros((30, 11))
+
+#     for i in range(0, dqfinal.shape[0] // 2 - 3, 3):
+#         p = i // 3
+#         Q_arr[p][:] = dqfinal[i][:]
+
+#     for i in range(dqfinal.shape[0] // 2 + 9, dqfinal.shape[0], 3):
+#         p = i // 3 - 3
+#         Q_arr[p][:] = dqfinal[i][:]
+
+#     return Q_arr
+
+def get_Q_final(pinfo, case, name_vessel):
 
     dinfo = scipy.io.loadmat(
         "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/case_info.mat"
     )
+    Lvessel=['L_MCA','R_MCA']
+    ind=Lvessel.index(name_vessel)
+    
+    L_indexes=[int(x) for x in np.linspace(0,100,30)]
+    print(L_indexes)
     dqfinal = dinfo.get("Q_final")
     Q_arr = np.zeros((30, 11))
-
-    for i in range(0, dqfinal.shape[0] // 2 - 3, 3):
-        p = i // 3
-        Q_arr[p][:] = dqfinal[i][:]
-
-    for i in range(dqfinal.shape[0] // 2 + 9, dqfinal.shape[0], 3):
-        p = i // 3 - 3
-        Q_arr[p][:] = dqfinal[i][:]
-
-    return Q_arr
+    for i in range(dqfinal.shape[1]):
+        for k in range(30):
+            Q_arr[k,i]=dqfinal[L_indexes[k],i]
+        
+    return Q_arr[:,ind]
 
 
-def plot_R(dpressure,ddist, i_vessel, pinfo, case, ax):
+def plot_R(dpressure,ddist, i_vessel, pinfo, case,num_cycle, ax,ax2):
 
     Ldist = []
 
@@ -805,10 +822,12 @@ def plot_R(dpressure,ddist, i_vessel, pinfo, case, ax):
     dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
         Ldist.append(float((dist[i] + dist[i + 1]) / 2))
-
+    
     tab_pressure = np.zeros((len_vessel, 3))
+    min_diff= []
+    max_diff= []
 
-    Qfinal = np.mean(get_Q_final(pinfo, case)[:, 3])
+    Qfinal = np.mean(get_Q_final(pinfo, case,name_vessel)[:])
     len_cycle = 30
     for i in range(len_vessel):
         # print(dpressure.get('{}'.format(indices[0])).get('pressure{}'.format(i_vessel))[1][1][0,i])
@@ -830,37 +849,46 @@ def plot_R(dpressure,ddist, i_vessel, pinfo, case, ax):
             ][1][2, i]
             for k in range(len_cycle)
         ]
-
+        
+        #min_diff.append([min(min(Lmin[j]-Lmin[j+1]),min(Lmean[j]-Lmean[j+1]),min(Lmax[j]-Lmax[j+1])) for j in range(len_vessel-1)])
+        # max_diff.append([max((Lmin[j]-Lmin[j+1]),(Lmean[j]-Lmean[j+1]),(Lmax[j]-Lmax[j+1])) for j in range(len_vessel-1)])
         tab_pressure[i, 0] = sum(Lmin) / len(Lmin)
         tab_pressure[i, 1] = sum(Lmean) / len(Lmean)
         tab_pressure[i, 2] = sum(Lmax) / len(Lmax)
-
-    tab_resistance = np.zeros((len_vessel, 3))
+    print(max_diff)
+    tab_resistance = np.zeros((len_vessel-1, 3))
     tab_resist_locale = np.zeros((len_vessel - 1, 3))
-    for i in range(1, len_vessel):
-        tab_resistance[i, :] = (tab_pressure[i, :] - tab_pressure[1, :]) / Qfinal
-    for i in range(len_vessel - 1):
+    for i in range(0, len_vessel-1):
+        tab_resistance[i, :] = (tab_pressure[i+1, :] - tab_pressure[0, :]) / Qfinal
+    for i in range(len_vessel -1):
         tab_resist_locale[i, :] = (tab_pressure[i , :] - tab_pressure[i+1, :]) / Qfinal
 
+
+    
     # fig = plt.figure(figsize=(14.4, 10.8))
     # ax=fig.add_subplot(111)
-    # ax.plot(Ldist[:-1], tab_resist_locale[:, 1], label="local resistance")
+    ax.plot(Ldist[:-1], tab_resist_locale[:, 1], label="Local resistance | " + case )
 
     #plt.yscale('symlog')
+    
+    ax.fill_between(Ldist[:-1],
+                      tab_resist_locale[:,2],
+                      tab_resist_locale[:,0],
+                      alpha=0.2
+                      )
 
-    # plt.plot(Ldist[1:], tab_resistance[1:, 1], "--")
-    # plt.plot(
-    #     Ldist[1:], tab_resistance[1:, 1], "o", label="Average resistance over time"
-    # )
-    # plt.fill_between(Ldist,
-    #                   tab_resistance[:,
-    #                                 0],
-    #                   tab_resistance[:,
-    #                                 2],
-    #                   alpha=0.2,
-    #                   label='average enveloppe of min/max resistance over time')
+   
+    ax2.fill_between(Ldist[1:],
+                      tab_resistance[:,
+                                    0],
+                      tab_resistance[:,
+                                    2],
+                      alpha=0.2
+                      )
 
-    ax.grid()
+    ax2.plot(
+    Ldist[1:], tab_resistance[:, 1], "-", label="Global resistance | " + case
+ )
     # ax.xlabel("distance along the vessel (m)", fontsize=18)
     # ax.ylabel("Resistance", fontsize=18)
     # ax.title("Resistance along the " + name_vessel, fontsize=20)
@@ -876,8 +904,8 @@ def plot_R(dpressure,ddist, i_vessel, pinfo, case, ax):
     #     + ".png"
     # )
     # plt.show()
-
-    return ax.plot(Ldist[:-1], tab_resist_locale[:, 1], label="local resistance | " + case)
+    plt.grid()
+    return fig
 
 
 
@@ -927,13 +955,13 @@ def main():
     
     # Still a few global variables. 
 
-    global pinfo
-    global case
-    global num_cycle
-    global step
-    global select_file
-    global filename
-    global data_file
+    # global pinfo
+    # global case
+    # global num_cycle
+    #global step
+    #global select_file
+    #global filename
+    #global data_file
     
     ######################################### Choosing the patient informations
   
@@ -1072,14 +1100,14 @@ def main():
 
         if select_vessel == "a":
             dpressure["{}".format(indices_dat[i])] = save_pressure_all(
-                data_file,dpoints_u, dvectors_u
+                data_file,dpoints_u, dvectors_u,pinfo,case
             )
             dname = "".join(["dpressure", "_", pinfo, "_", case])
             save_dict(dpressure, "N:/vasospasm/pressure_pytec_scripts/" + dname)
 
         else:
             i_ = int(select_vessel)
-            dpress = save_pressure(data_file,i_, dpoints_u, dvectors_u)
+            dpress = save_pressure(data_file,i_, dpoints_u, dvectors_u,pinfo,case)
             dpressure["{}".format(indices_dat[i])] = dpress
             save_dict(
                 dpressure,
@@ -1090,91 +1118,72 @@ def main():
             ddist = {}
             for k in range(len(dpoints_u)):
                 ddist["{}".format(k)] = get_distance_along(
-                    k, i, dpressure, dvectors_u, dpoints_u,pinfo,case
+                    k, i, dpressure, dvectors_u, dpoints_u,pinfo,case,num_cycle
+                    
                 )
 
         else:
             i_vessel = int(select_vessel)
-            ddist = get_distance_along(i_vessel, i, dpressure, dvectors_u, dpoints_u,pinfo,case)
+            ddist = get_distance_along(i_vessel, i, dpressure, dvectors_u, dpoints_u,pinfo,case,num_cycle)
             save_dict(
                 ddist,
                 "N:/vasospasm/pressure_pytec_scripts/ddist_" + pinfo + "_" + case ,
             )
 
-        if select_vessel == "a":
-            for k in range(len(dpoints_u)):
-                Lpress = dpressure.get("{}".format(indices_dat[i])).get(
-                    "pressure{}".format(k)
-                )[1][1]
-                dist = ddist.get("{}".format(k)).get("dist{}".format(k))[1]
-                fig = plot_linear(k, Lpress, dpoints_u, dvectors_u, dist)
-                fig.savefig(
-                    "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
-                    + pinfo
-                    + "/"
-                    + case
-                    + "/cycle_"
-                    + str(num_cycle)
-                    + "/plot_"
-                    + indices_dat[i]
-                    + "/"
-                    + "plot_"
-                    + dpoints_u.get("points{}".format(k))[0]
-                    + ".png"
-                )
+        # if select_vessel == "a":
+        #     for k in range(len(dpoints_u)):
+        #         Lpress = dpressure.get("{}".format(indices_dat[i])).get(
+        #             "pressure{}".format(k)
+        #         )[1][1]
+        #         dist = ddist.get("{}".format(k)).get("dist{}".format(k))[1]
+        #         fig = plot_linear(k, Lpress, dpoints_u, dvectors_u, dist)
+        #         fig.savefig(
+        #             "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
+        #             + pinfo
+        #             + "/"
+        #             + case
+        #             + "/cycle_"
+        #             + str(num_cycle)
+        #             + "/plot_"
+        #             + indices_dat[i]
+        #             + "/"
+        #             + "plot_"
+        #             + dpoints_u.get("points{}".format(k))[0]
+        #             + ".png"
+        #         )
 
-        else:
-            i_vessel = int(select_vessel)
-            Lpress = dpressure.get("{}".format(indices_dat[i])).get(
-                "pressure{}".format(i_)
-            )[1][1]
-            dist = ddist.get("dist{}".format(i_vessel))[1]
-            print("Lpress : ", Lpress)
-            print("dist :", dist)
-            fig = plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist)
-            fig.savefig(
-                "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
-                + pinfo
-                + "/"
-                + case
-                + "/cycle_"
-                + str(num_cycle)
-                + "/plot_"
-                + indices_dat[i]
-                + "/"
-                + "plot_"
-                + dpoints_u.get("points{}".format(i_))[0]
-                + ".png"
-            )
+        # else:
+        #     i_vessel = int(select_vessel)
+        #     Lpress = dpressure.get("{}".format(indices_dat[i])).get(
+        #         "pressure{}".format(i_)
+        #     )[1][1]
+        #     dist = ddist.get("dist{}".format(i_vessel))[1]
+        #     print("Lpress : ", Lpress)
+        #     print("dist :", dist)
+        #     fig = plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist)
+        #     fig.savefig(
+        #         "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
+        #         + pinfo
+        #         + "/"
+        #         + case
+        #         + "/cycle_"
+        #         + str(num_cycle)
+        #         + "/plot_"
+        #         + indices_dat[i]
+        #         + "/"
+        #         + "plot_"
+        #         + dpoints_u.get("points{}".format(i_))[0]
+        #         + ".png"
+        #     )
 
     #plot_R(dpressure,i_vessel,pinfo,case)
 
     return dpressure,ddist
 
-# if __name__=="__main__":
-#     dpressure_rmca_vas,ddist_rmca_vas = main()
+if __name__=="__main__":
+    dpressure_pt7_bas,ddist_pt7_bas = main()
     
 
-
-fig, ax = plt.subplots(1,1)
-l1 = plot_R(dpressure_rmca_vas,ddist_rmca_vas,11, 'pt2', 'baseline', ax)
-l2 = plot_R(dpress_rmca_vas,ddist_rmca_vas_vas,11, 'pt2', 'vasospasm', ax)
-plt.legend()
-plt.ylabel('resistance')
-plt.xlabel('distance along the vessel (m)')
-plt.title('resistance along the RMCA') 
-# plt.yscale('log')
-plt.grid()
-plt.show()
-
-def final_set_of_plots(pinfo,i_vessel,num_cycle,dpoints_bas,dvectors_bas,dpressure_bas,dpoints_vas,dvectors_vas,dpressure_vas):
-    
-    
-    plot_time_dispersion(dpressure_bas,dpressure_vas, i_vessel, pinfo)
-    plot_R(dpressure_bas,dpressure_vas, i_vessel, pinfo, cas)
-    plot_cross_section(pinfo)
-    
-    
     
     
     

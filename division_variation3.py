@@ -1270,6 +1270,16 @@ def delete_old_arteries(dpoint_i):
             and "aneurysm" in dpoint_i.get("points{}".format(j))[0]
         ):
             I_supp.append(j)
+        if (
+            dpoint_i.get("points{}".format(j))[0] is not None
+            and "BAS_PCA" in dpoint_i.get("points{}".format(j))[0]
+        ):
+            I_supp.append(j)
+        if (
+            dpoint_i.get("points{}".format(j))[0] is not None
+            and "Pcom_PCA" in dpoint_i.get("points{}".format(j))[0]
+        ):
+            I_supp.append(j)
 
     for i in I_supp:
         del dpoint_i["points{}".format(i)]
