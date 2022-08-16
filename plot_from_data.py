@@ -62,29 +62,11 @@ def main(pinfo,step,num_cycle):
         
     Lvessel=['L_MCA','R_MCA','L_A1','L_A2','R_A1','R_A2','L_P1','L_P2','R_P1','R_P2','BAS','L_ICA','R_ICA']
     
-      # ind=Lvessel.index(name_vessel)
       
     Lvessel_pth=[dpoints_bas.get('points{}'.format(i))[0] for i in range(len(dpoints_bas))]
     Lvessel_comp=Lvessel_pth.copy()
     
-    
-    # for x in Lvessel_comp:
-    #     if 'L_P1' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'L_PCA'
-    #     if 'L_P2' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'L_PCA'
-    #     if 'R_P1' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'R_PCA'
-    #     if 'R_P2' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'R_PCA'
-    #     if 'R_A2' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'R_ACA'
-    #     if 'R_A1' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'R_ACA'
-    #     if 'L_A2' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'L_ACA'
-    #     if 'L_A1' in x:
-    #         Lvessel_comp[Lvessel_comp.index(x)] = 'L_ACA'
+   
     
     
     Verity = np.zeros((len(Lvessel),len(Lvessel_comp)))
@@ -108,56 +90,54 @@ def main(pinfo,step,num_cycle):
         
         i=L_ind[k]
         print(i)
-        # print(i)
-        #fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2)
-        fig,(ax1,ax4,ax2,ax3)=plt.subplots(4,1,figsize=(10,15))
-        plt.rcParams['axes.grid'] = True
+        len_vessel_bas = dpoints_bas.get('points{}'.format(i))[1].shape[0]
+        len_vessel_vas = dpoints_vas.get('points{}'.format(i))[1].shape[0]
+        
+        if len_vessel_bas > 2 and len_vessel_vas > 2:
 
-        plt.suptitle("Plots in the " + dpoints_bas.get('points{}'.format(i))[0])
-        
-        l1 = press_pj.plot_R(dpressure_pt2_bas,ddist_pt2_bas,dpoints_bas,i, pinfo, 'baseline',num_cycle, ax1,ax4)
-        l2 = press_pj.plot_R(dpressure_pt2_vas,ddist_pt2_vas,dpoints_vas, i , pinfo, 'vasospasm',num_cycle, ax1,ax4)
-        ax1.set_ylabel('resistance')
-        ax1.set_title('local resistance along the vessel',fontsize='small' )
-        ax1.legend(fontsize='small')
-        # plt.grid()
-        ax4.set_xlabel('distance along the vessel (m)',fontsize='small')
-        ax4.set_ylabel('resistance')
-        ax4.set_title('global resistance along the vessel',fontsize='small' )
+      
+            fig,(ax1,ax4,ax2,ax3)=plt.subplots(4,1,figsize=(10,15))
+            plt.rcParams['axes.grid'] = True
     
-        ax4.legend(fontsize='small')
-        # plt.grid()
+            plt.suptitle("Plots in the " + dpoints_bas.get('points{}'.format(i))[0])
+            
+            l1 = press_pj.plot_R(dpressure_pt2_bas,ddist_pt2_bas,dpoints_bas,i, pinfo, 'baseline',num_cycle, ax1,ax4)
+            l2 = press_pj.plot_R(dpressure_pt2_vas,ddist_pt2_vas,dpoints_vas, i , pinfo, 'vasospasm',num_cycle, ax1,ax4)
+            ax1.set_ylabel('resistance')
+            ax1.set_title('local resistance along the vessel',fontsize='small' )
+            ax1.legend(fontsize='small')
+            ax4.set_xlabel('distance along the vessel (m)',fontsize='small')
+            ax4.set_ylabel('resistance')
+            ax4.set_title('global resistance along the vessel',fontsize='small' )
         
-        # plt.show()
-        # plt.yscale('log')
-        
-        
-        
-        
-        l1 = press_pj.plot_time_dispersion(dpressure_pt2_bas,ddist_pt2_bas,i, pinfo, 'baseline',num_cycle, ax2)
-        l2 = press_pj.plot_time_dispersion(dpressure_pt2_vas,ddist_pt2_vas,i, pinfo, 'vasospasm',num_cycle, ax2)
-        ax2.set_ylabel('pressure')
-        ax2.set_xlabel('distance along the vessel (m)',fontsize='small')
-        ax2.set_title('pressure along the vessel',fontsize='small') 
-    #     #plt.yscale('log')
-        ax2.legend(fontsize='small')
-    #     plt.grid()
-    #     # plt.show()
-        
-        
-        # fig, ax3 = plt.subplots(1,1)
-        # l1 = press_pj.plot_cross_section('pt2', 'R_ICA_MCA', ax3)
-        # ax3.set_ylabel('radius (m)')
-        # ax3.set_xlabel('Distance along the vessel')
-        # ax3.set_title("Cross section along the R_ICA_MCA",fontsize='small' )
-        # #plt.yscale('log')
-        # ax3.legend(fontsize='small')
-        
-        fig.tight_layout()
-        
-
-        plt.show()
+            ax4.legend(fontsize='small')
+           
+            
+            # Plot pressure 
+            
+            l1 = press_pj.plot_time_dispersion(dpressure_pt2_bas,ddist_pt2_bas,i, pinfo, 'baseline',num_cycle, ax2)
+            l2 = press_pj.plot_time_dispersion(dpressure_pt2_vas,ddist_pt2_vas,i, pinfo, 'vasospasm',num_cycle, ax2)
+            ax2.set_ylabel('pressure')
+            ax2.set_xlabel('distance along the vessel (m)',fontsize='small')
+            ax2.set_title('pressure along the vessel',fontsize='small') 
+            ax2.legend(fontsize='small')
+     
+            # Plot radius
+            
+            # fig, ax3 = plt.subplots(1,1)
+            # l1 = press_pj.plot_cross_section('pt2', 'R_ICA_MCA', ax3)
+            # ax3.set_ylabel('radius (m)')
+            # ax3.set_xlabel('Distance along the vessel')
+            # ax3.set_title("Cross section along the R_ICA_MCA",fontsize='small' )
+            # #plt.yscale('log')
+            # ax3.legend(fontsize='small')
+            
+            fig.tight_layout()
+            plt.savefig("N:/vasospasm/pressure_pytec_scripts/plots_8_4/" + pinfo + '_' + dpoints_bas.get('points{}'.format(i))[0])
+            
     
+            plt.show()
+        
     
 if __name__ == '__main__':
     main('pt2',10,2)
