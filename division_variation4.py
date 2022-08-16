@@ -352,31 +352,33 @@ def division_A(pinfo, case, step):
 
     dpoints_divided = {}
 
-    folder = "_segmentation"
-    pathpath = (
-        "N:/vasospasm/"
-        + pinfo
-        + "/"
-        + case
-        + "/1-geometry/"
-        + pinfo
-        + "_"
-        + case
-        + folder
-        + "/paths"
-    )
+    # folder = "_segmentation_cropACA"
+    # pathpath = (
+    #     "N:/vasospasm/"
+    #     + pinfo
+    #     + "/"
+    #     + case
+    #     + "/1-geometry/"
+    #     + pinfo
+    #     + "_"
+    #     + case
+    #     + folder
+    #     + "/Paths"
+    # )
 
-    os.chdir(pathpath)
-    onlyfiles = []
-    for file in glob.glob("*.pth"):
-        onlyfiles.append(file)
-    for files in onlyfiles:
-        if "Acom" in files:
-            points_Acom = geom.get_spline_points(files, step)
-        if "L_ACA" in files:
-            points_LACA = geom.get_spline_points(files, step)
-        if "R_ACA" in files:
-            points_RACA = geom.get_spline_points(files, step)
+    # os.chdir(pathpath)
+    # print(pathpath)
+    # onlyfiles = []
+    # for file in glob.glob("*.pth"):
+    #     onlyfiles.append(file)
+    # for files in onlyfiles:
+    #     if "Acom" in files:
+    #         points_Acom = geom.get_spline_points(files, step)
+    #     if "L_ACA" in files:
+    #         points_LACA = geom.get_spline_points(files, step)
+    #     if "R_ACA" in files:
+    #         points_RACA = geom.get_spline_points(files, step)
+            
 
     pathctgr = (
         "N:/vasospasm/"
@@ -403,7 +405,7 @@ def division_A(pinfo, case, step):
             center_A2 = geom.get_center_radius_ulti(files, pinfo, case)
 
  
-    folder = "_segmentation"
+    folder = "_segmentation_cropACA" # HERE ADD '_cropACA' if issue with path&model size
     pathpath = (
         "N:/vasospasm/"
         + pinfo

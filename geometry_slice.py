@@ -263,21 +263,21 @@ def find_radius(center, coord_center):
     Lrad = [L.index(x) for x in L if x > 0.9 * radius]
     coord_rad = np.asarray([coord_center[i, :] for i in Lrad])
 
-    fig = plt.figure(figsize=(7, 7))
-    ax = fig.add_subplot(111, projection="3d")
-    ax.grid()
-    ax.scatter(coord_rad[:, 0], coord_rad[:, 1], coord_rad[:, 2], label="radius")
+    # fig = plt.figure(figsize=(7, 7))
+    # ax = fig.add_subplot(111, projection="3d")
+    # ax.grid()
+    # ax.scatter(coord_rad[:, 0], coord_rad[:, 1], coord_rad[:, 2], label="radius")
 
-    ax.plot(center[0], center[1], center[2], c="k", marker="x")
+    # ax.plot(center[0], center[1], center[2], c="k", marker="x")
 
-    Xrad = np.zeros((2, 3))
-    Xrad[0] = center
-    Xrad[1] = coord_rad[1]  # Plot the radius
-    ax.plot(Xrad[:, 0], Xrad[:, 1], Xrad[:, 2])
+    # Xrad = np.zeros((2, 3))
+    # Xrad[0] = center
+    # Xrad[1] = coord_rad[1]  # Plot the radius
+    # ax.plot(Xrad[:, 0], Xrad[:, 1], Xrad[:, 2])
 
-    ax.view_init(30, 0)
-    ax.legend()
-    plt.show()
+    # ax.view_init(30, 0)
+    # ax.legend()
+    # plt.show()
 
     return radius
 
@@ -585,7 +585,6 @@ def get_center_radius(fname, pinfo, case):
     index=0
     if 'format' in str(root[0]):
         index=1
-
 
     branch = root[index][0]
     n_points = len(branch)

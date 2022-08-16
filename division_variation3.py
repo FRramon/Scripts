@@ -541,7 +541,7 @@ def division_RP(pinfo, case, step):
     dpoints_divided = {}
     k = 0
     if points_1.shape[0] != 0:
-        dpoints_divided["points{}".format(k)] = side_vessel + "P2", points_1
+        dpoints_divided["points{}".format(k)] = side_vessel + "_P2", points_1
         k += 1
     if points_2.shape[0] != 0:
         dpoints_divided["points{}".format(k)] = side_vessel + "_Pcom", points_2
