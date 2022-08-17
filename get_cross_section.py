@@ -497,21 +497,37 @@ def compute_radius(pinfo,case,num_cycle,step, dpoints,dvectors,i):
     return compute_on_slice_convex(data_file,i,dpoints,dvectors,pinfo,case)
 
 
-# for i in range(len(dpoints_bas)):
-#     len_vessel = dpoints_bas.get('points{}'.format(i))[1].shape[0]
-#     name_vessel = dpoints_bas.get('points{}'.format(i))[0]
 
-#     X= np.linspace(0,len_vessel,len_vessel-1)
-#     print(X)
+def get_dCS(pinfo,case,num_cycle,step,dpoints,dvectors,ddist):
+
     
-#     Radius_vessel= [x[1] for x in dradius_update.get('slice{}'.format(i))[:]]
+    Lvessel=['L_MCA','R_MCA','L_A1','L_A2','R_A1','R_A2','L_P1','L_P2','R_P1','R_P2','BAS','L_ICA','R_ICA']
+
+    Lvessel_pth=[dpoints.get('points{}'.format(i))[0] for i in range(len(dpoints))]
+    Lvessel_comp=Lvessel_pth.copy()
+      
     
-#     plt.plot(X,Radius_vessel)
-#     plt.title(name_vessel)
-#     plt.ylabel('radius of the vessel (m)')
-#     plt.xlabel('arbitrary X')
-#     plt.show()
+    Verity = np.zeros((len(Lvessel),len(Lvessel_comp)))
     
+    for i in range(len(Lvessel)):
+        for j in range(len(Lvessel_comp)):
+            
+            Verity[i,j] = (Lvessel[i] in Lvessel_comp[j])
+    L_test = []
+    L_ind = []
+    for i in range(len(Lvessel)):
+        for j in range(len(Lvessel_comp)):
+            if Verity[i,j] == 1:
+                L_test.append(i)
+                L_ind.append(j)
+                
+    dCS = {}    
+    for k in range(len(L_ind)):
+        i = L_ind[k]
+        dCS['slice{}'.format(i)] = compute_radius(pinfo,case,num_cycle,step, dpoints, dvectors, i)
+    
+    return dCS
+
     
     
     

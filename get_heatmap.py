@@ -122,7 +122,6 @@ def dpress_offset(dpressure_bas,dpressure,ddist,dpoints, i_vessel, pinfo,num_cyc
     )
     name_vessel = dpoints.get("points{}".format(i_vessel))[0]
     
-    print(name_vessel)
   
     dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
@@ -204,29 +203,29 @@ def dpress_offset(dpressure_bas,dpressure,ddist,dpoints, i_vessel, pinfo,num_cyc
 
 
 #%% LOAD DATA
-step = 10
-num_cycle = 2
-pinfo = 'pt2'
-dpoints_bas ,dvectors_bas = variation._main_(pinfo,'baseline',step)
-dpoints_vas ,dvectors_vas = variation._main_(pinfo,'vasospasm',step)
- # Replace by load dict & return theese dict in main project
+# step = 10
+# num_cycle = 2
+# pinfo = 'pt2'
+# dpoints_bas ,dvectors_bas = variation._main_(pinfo,'baseline',step)
+# dpoints_vas ,dvectors_vas = variation._main_(pinfo,'vasospasm',step)
+#  # Replace by load dict & return theese dict in main project
  
  
-dpressure_pt2_bas = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/dpressure_pt2_bas')
-ddist_pt2_bas_raw = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/ddist_pt2_bas')
-dpressure_pt2_vas = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/dpressure_pt2_vas')
-ddist_pt2_vas_raw = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/ddist_pt2_vas')
+# dpressure_pt2_bas = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/dpressure_pt2_bas')
+# ddist_pt2_bas_raw = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/ddist_pt2_bas')
+# dpressure_pt2_vas = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/dpressure_pt2_vas')
+# ddist_pt2_vas_raw = load_dict('N:/vasospasm/pressure_pytec_scripts/plots_8_4/ddist_pt2_vas')
  
  
-ddist_pt2_bas = {}
-for i in range(len(ddist_pt2_bas_raw)):
-    ddist_pt2_bas['dist{}'.format(i)] = ddist_pt2_bas_raw.get('{}'.format(i)).get('dist{}'.format(i))
+# ddist_pt2_bas = {}
+# for i in range(len(ddist_pt2_bas_raw)):
+#     ddist_pt2_bas['dist{}'.format(i)] = ddist_pt2_bas_raw.get('{}'.format(i)).get('dist{}'.format(i))
  
-ddist_pt2_vas = {}
-for i in range(len(ddist_pt2_vas_raw)):
-    ddist_pt2_vas['dist{}'.format(i)] = ddist_pt2_vas_raw.get('{}'.format(i)).get('dist{}'.format(i))
+# ddist_pt2_vas = {}
+# for i in range(len(ddist_pt2_vas_raw)):
+#     ddist_pt2_vas['dist{}'.format(i)] = ddist_pt2_vas_raw.get('{}'.format(i)).get('dist{}'.format(i))
  
-Q2bas,lnames = press_pj.get_Q_final('pt2', 'baseline', dpoints_bas, 2)
+# Q2bas,lnames = press_pj.get_Q_final('pt2', 'baseline', dpoints_bas, 2)
  
 #%%
 
@@ -382,7 +381,7 @@ def get_ultimate_values(dpoints_bas,tab_pressure_bas,tab_pressure_vas,tab_resist
         }
     
     
-    df = pd.DataFrame(data,index = [dpoints_bas.get('points{}'.format(i))[0]])
+    df = pd.DataFrame(data,index = [dpoints_bas.get('points{}'.format(ivessel))[0]])
     df.loc()
     
     return df
@@ -483,41 +482,41 @@ def get_dCS(pinfo,case,num_cycle,step,dpoints,dvectors,ddist):
     
     return dCS
 
-def plot_CS(dCS,ddist,case):
-    for k in range(len(L_ind)):
-        i = L_ind[k]
-        slice_to_plot = dCS.get('slice{}'.format(i))
-        name,dist_forx = ddist.get('dist{}'.format(i))
-        print('name vessel : ',name)
-        print('nb slice  : ',len(slice_to_plot))
-        print('nb dist : ',len(dist_forx))
-        len_to_keep = len(slice_to_plot)-len(dist_forx)
+# def plot_CS(dCS,ddist,case):
+#     for k in range(len(L_ind)):
+#         i = L_ind[k]
+#         slice_to_plot = dCS.get('slice{}'.format(i))
+#         name,dist_forx = ddist.get('dist{}'.format(i))
+#         print('name vessel : ',name)
+#         print('nb slice  : ',len(slice_to_plot))
+#         print('nb dist : ',len(dist_forx))
+#         len_to_keep = len(slice_to_plot)-len(dist_forx)
         
-        print(len_to_keep)
-        # adjust sizes
-        if len_to_keep>0:
-            slice_to_plot = slice_to_plot[:-len_to_keep]
-        elif len_to_keep<0:
-            dist_forx = dist_forx[:+len_to_keep]
+#         print(len_to_keep)
+#         # adjust sizes
+#         if len_to_keep>0:
+#             slice_to_plot = slice_to_plot[:-len_to_keep]
+#         elif len_to_keep<0:
+#             dist_forx = dist_forx[:+len_to_keep]
         
-        # Clean (remove points to big)
+#         # Clean (remove points to big)
         
-        print('\n')
-        avg_value = np.mean(slice_to_plot)
-        for l in range(len(slice_to_plot)):
-            if slice_to_plot[l] > 3 * avg_value:
-                if l>= 1:
-                    slice_to_plot[l] = slice_to_plot[l-1]
-                else : 
-                    slice_to_plot[l] = slice_to_plot[3]
-        print('name vessel : ',name)
-        print('nb slice  : ',len(slice_to_plot))
-        print('nb dist : ',len(dist_forx))
+#         print('\n')
+#         avg_value = np.mean(slice_to_plot)
+#         for l in range(len(slice_to_plot)):
+#             if slice_to_plot[l] > 3 * avg_value:
+#                 if l>= 1:
+#                     slice_to_plot[l] = slice_to_plot[l-1]
+#                 else : 
+#                     slice_to_plot[l] = slice_to_plot[3]
+#         print('name vessel : ',name)
+#         print('nb slice  : ',len(slice_to_plot))
+#         print('nb dist : ',len(dist_forx))
         
-        plt.plot(dist_forx,slice_to_plot)
-        plt.show()
+#         plt.plot(dist_forx,slice_to_plot)
+#         plt.show()
         
-    plt.show()
+#     plt.show()
     
     
     

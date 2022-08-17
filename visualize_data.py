@@ -14,9 +14,12 @@ import numpy as np
 import main_pressure_project as press_pj
 import geometry_slice as geom
 import division_variation3 as variation
-importlib.reload(press_pj)
-importlib.reload(geom)
-importlib.reload(variation)
+import get_heatmap as hmp
+# importlib.reload(press_pj)
+# importlib.reload(geom)
+# importlib.reload(variation)
+# importlib.reload(hmp)
+
 #Load etc
 
 
@@ -42,9 +45,9 @@ def plot_CS(dCS,ddist,case,i,ax):
         # i = L_ind[k]
     slice_to_plot = dCS.get('slice{}'.format(i))
     name,dist_forx = ddist.get('dist{}'.format(i))
-    print('name vessel : ',name)
-    print('nb slice  : ',len(slice_to_plot))
-    print('nb dist : ',len(dist_forx))
+    # print('name vessel : ',name)
+    # print('nb slice  : ',len(slice_to_plot))
+    # print('nb dist : ',len(dist_forx))
     len_to_keep = len(slice_to_plot)-len(dist_forx)
     
     print(len_to_keep)
@@ -56,7 +59,7 @@ def plot_CS(dCS,ddist,case,i,ax):
     
     # Clean (remove points to big)
     
-    print('\n')
+    # print('\n')
     avg_value = np.mean(slice_to_plot)
     for l in range(len(slice_to_plot)):
         if slice_to_plot[l] > 3 * avg_value:
@@ -64,9 +67,11 @@ def plot_CS(dCS,ddist,case,i,ax):
                 slice_to_plot[l] = slice_to_plot[l-1]
             else : 
                 slice_to_plot[l] = slice_to_plot[3]
-    print('name vessel : ',name)
-    print('nb slice  : ',len(slice_to_plot))
-    print('nb dist : ',len(dist_forx))
+    # print('name vessel : ',name)
+    # print('nb slice  : ',len(slice_to_plot))
+    # print('nb dist : ',len(dist_forx))
+    
+    ax.plot(dist_forx,slice_to_plot)
     
     return ax
 
@@ -131,7 +136,7 @@ def main(pinfo,step,num_cycle):
     for k in range(len(L_ind)):
         
         i=L_ind[k]
-        print(i)
+        # print(i)
         len_vessel_bas = dpoints_bas.get('points{}'.format(i))[1].shape[0]
         len_vessel_vas = dpoints_vas.get('points{}'.format(i))[1].shape[0]
         
@@ -178,6 +183,10 @@ def main(pinfo,step,num_cycle):
             
     
             plt.show()
+            
+    fig2 = plt.figure()
+    hmp.plot_heatmap(pinfo,num_cycle,dpressure_pt2_bas,dpressure_pt2_vas,ddist_pt2_bas,ddist_pt2_vas,dpoints_bas,dpoints_vas)
+    plt.show()
         
     
 if __name__ == '__main__':
@@ -185,64 +194,6 @@ if __name__ == '__main__':
         
         
         
-        # def final_set_of_plots(pinfo,i_vessel,num_cycle,dpoints_bas,dvectors_bas,dpressure_bas,dpoints_vas,dvectors_vas,dpressure_vas):
-        
-        
-    #     plot_time_dispersion(dpressure_bas,dpressure_vas, i_vessel, pinfo)
-    #     plot_R(dpressure_bas,dpressure_vas, i_vessel, pinfo, cas)
-    #     plot_cross_section(pinfo)
-        
-    #fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(2,2)
-    
-    
-    # fig,(ax1,ax4,ax2,ax3)=plt.subplots(4,1,figsize=(10,15))
-    
-    # l1 = press_pj.plot_R(dpressure_rmca_vas,ddist_rmca_vas,11, 'pt2', 'baseline',2, ax1,ax4)
-    # l2 = press_pj.plot_R(dpress_rmca_vas,ddist_rmca_vas_vas,11, 'pt2', 'vasospasm',2, ax1,ax4)
-    # ax1.set_ylabel('resistance')
-    # ax1.set_title('resistance along the RMCA',fontsize='small' )
-    # ax1.legend(fontsize='small')
-    # plt.grid()
-    # ax4.set_xlabel('distance along the vessel (m)',fontsize='small')
-    # ax4.set_ylabel('resistance')
-    
-    # ax4.legend(fontsize='small')
-    # plt.grid()
-    
-    # # plt.show()
-    # # plt.yscale('log')
-    
-    
-    
-    # # fig,ax2=plt.subplots(1,1)
-    
-    # l1 = press_pj.plot_time_dispersion(dpressure_rmca_vas,ddist_rmca_vas,11, 'pt2', 'baseline',2, ax2)
-    # l2 = press_pj.plot_time_dispersion(dpress_rmca_vas,ddist_rmca_vas_vas,11, 'pt2', 'vasospasm',2, ax2)
-    # ax2.set_ylabel('pressure')
-    # ax2.set_xlabel('distance along the vessel (m)',fontsize='small')
-    # ax2.set_title('pressure along the RMCA',fontsize='small') 
-    # #plt.yscale('log')
-    # ax2.legend(fontsize='small')
-    # plt.grid()
-    # # plt.show()
-    
-    
-    # # fig, ax3 = plt.subplots(1,1)
-    # l1 = press_pj.plot_cross_section('pt2', 'R_ICA_MCA', ax3)
-    # ax3.set_ylabel('radius (m)')
-    # ax3.set_xlabel('Distance along the vessel')
-    # ax3.set_title("Cross section along the R_ICA_MCA",fontsize='small' )
-    # #plt.yscale('log')
-    # ax3.legend(fontsize='small')
-    
-    # fig.tight_layout()
-    
-    
-    # plt.show()
-    
-    
-        
-        
-    
+
     
         

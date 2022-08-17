@@ -66,7 +66,7 @@ def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case,
     ddist = {}
     dvectors = {}
     onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle)
-    print(indices_dat[i_dat])
+    # print(indices_dat[i_dat])
     # Inverse the order of the points if the pressure is not decreasing
 
     if (
@@ -273,7 +273,7 @@ def plot_cross_section(pinfo,name,ax):
         points,radius=dict_interb.get('center{}'.format(i))
         Array_control_points_bas[i-1,:]=points
         Array_radius_bas[i-1]=radius
-    print('bas : ',Array_radius_bas.shape)
+    # print('bas : ',Array_radius_bas.shape)
     
     dict_interv=dradius_vas.get(name)
     Array_control_points_vas=np.zeros((len(dict_interv),3))
@@ -283,7 +283,7 @@ def plot_cross_section(pinfo,name,ax):
         points,radius=dict_interv.get('center{}'.format(i))
         Array_control_points_vas[i-1,:]=points
         Array_radius_vas[i-1]=radius
-    print('vas : ',Array_radius_vas.shape)
+    # print('vas : ',Array_radius_vas.shape)
         
     vect_bas=geom.calculate_normal_vectors(Array_control_points_bas)
     vect_vas=geom.calculate_normal_vectors(Array_control_points_vas)
@@ -646,7 +646,7 @@ def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
     Ldist = []
 
     onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
-    print(indices)
+    # print(indices)
     len_vessel = (
         dpressure.get("{}".format(indices[0]))
         .get("pressure{}".format(i_vessel))[1][1]
@@ -680,6 +680,8 @@ def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
         Ldist.append(float((dist[i] + dist[i + 1]) / 2))
 
     tab_pressure = np.zeros((len_vessel, 3))
+    tab_pressure_offset = np.zeros((len_vessel, 3))
+
     len_cycle=30
     for i in range(len_vessel):
        Lmin = [
@@ -703,14 +705,19 @@ def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
        tab_pressure[i, 0] = sum(Lmin) / len(Lmin)
        tab_pressure[i, 1] = sum(Lmean) / len(Lmean)
        tab_pressure[i, 2] = sum(Lmax) / len(Lmax)
+       
+       tab_pressure_offset[i,0] = tab_pressure[i,0] - tab_pressure[0,1]
+       tab_pressure_offset[i,1] = tab_pressure[i,1] - tab_pressure[0,1]
+       tab_pressure_offset[i,2] = tab_pressure[i,2] - tab_pressure[0,1]
+
 
     # fig = plt.figure(figsize=(14.4, 10.8))
 
-    ax.plot(Ldist, tab_pressure[:, 1], "-", label="Average pressure over time")
+    ax.plot(Ldist, tab_pressure_offset[:, 1], "-", label="Average pressure over time")
     ax.fill_between(
         Ldist,
-        tab_pressure[:, 0],
-        tab_pressure[:, 2],
+        tab_pressure_offset[:, 0],
+        tab_pressure_offset[:, 2],
         alpha=0.2
     )
 
@@ -833,7 +840,7 @@ def get_Q_final(pinfo, case,dpoints,num_cycle):
         
         L_to_extract=Verity[:,L_ind[k]]
         
-        print('indice L_ind  : ', L_ind[k])
+        # print('indice L_ind  : ', L_ind[k])
         for i in range(len(Lvessel)):
             
             if L_to_extract[i] == 1:
@@ -860,7 +867,7 @@ def plot_R(dpressure,ddist,dpoints, i_vessel, pinfo, case,num_cycle, ax,ax2):
     )
     name_vessel = dpoints.get("points{}".format(i_vessel))[0]
     
-    print(name_vessel)
+    # print(name_vessel)
   
     dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
@@ -936,8 +943,8 @@ def plot_R(dpressure,ddist,dpoints, i_vessel, pinfo, case,num_cycle, ax,ax2):
     for i in range(len_vessel -1):
         tab_resist_locale[i, :] = (tab_pressure[i , :] - tab_pressure[i+1, :]) / Qfinal
 
-    print(tab_resist_locale.shape)
-    print(len(Ldist))
+    # print(tab_resist_locale.shape)
+    # print(len(Ldist))
     
     # fig = plt.figure(figsize=(14.4, 10.8))
     # ax=fig.add_subplot(111)

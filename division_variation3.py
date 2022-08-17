@@ -492,7 +492,7 @@ def division_RP(pinfo, case, step):
 
     L = np.linspace(0, len(points_vessel) - 1, 20)
     Lind = [int(np.floor(x)) for x in L]
-    print(Lind)
+    # print(Lind)
     for ik in Lind:
 
         annotation = "point {}".format(ik)
@@ -831,7 +831,7 @@ def division_A(pinfo, case, step):
                 other_side='R'
             else:
                 other_side='L'
-            print(other_side)
+            # print(other_side)
             for subfile in onlyfiles:
                 if 'ACA_A2' in subfile:
                     points_ACA_A2 = geom.get_spline_points(subfile, step)
@@ -1084,8 +1084,8 @@ def new_division_P_bas(pinfo, case, step):
                     points_P2, center_pcom.get("center2")[1]
                 )
 
-            print(indice_P2)
-            print(indice_basP1)
+            # print(indice_P2)
+            # print(indice_basP1)
             points_P2 = points_P2[indice_P2:]
             points_basP1 = points_basP1[: points_basP1.shape[0] - indice_basP1]
 
@@ -1120,7 +1120,7 @@ def new_division_P_bas(pinfo, case, step):
             plt.title("BAS + P1 Division")
             L = np.linspace(0, points_basP1.shape[0] - 1, 20)
             Lind = [int(np.floor(x)) for x in L]
-            print(Lind)
+            # print(Lind)
             for ik in Lind:
 
                 annotation = "point {}".format(ik)
