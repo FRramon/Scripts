@@ -33,6 +33,13 @@ import skg
 from skg import nsphere
 import pickle
 from tqdm import tqdm
+import alphashape
+from descartes import PolygonPatch
+
+import math
+from itertools import combinations
+
+
 
 #%%
 os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
@@ -85,6 +92,11 @@ def data_coor(data_file,pinfo,case):
     coordinates_fluent = np.array([x_base, y_base, z_base]).T
 
     return coordinates_fluent
+
+
+def dist(p1, p2):
+    (x1, y1), (x2, y2) = p1, p2
+    return np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
 
 def find_closest(data_file,pinfo,case, origin, name):
@@ -271,7 +283,7 @@ def orthogonal_projection(Slice_array,origin,normal):
     u = U/np.linalg.norm(U)
     
     V = np.array([-normal[0]*normal[2],-normal[1]*normal[2],normal[0]*normal[0]+normal[1]*normal[1]])
-    v = V/np.linalg.norm(U)
+    v = V/np.linalg.norm(V)
     
     
 
@@ -281,8 +293,37 @@ def orthogonal_projection(Slice_array,origin,normal):
         # xprime = np.dot(U,x)
         # yprime = np.dot(V,x)
         
-        xprime = np.dot(u,slice_rev[i,:]-origin)
-        yprime = np.dot(v,slice_rev[i,:]-origin)
+        xprime = np.dot(U,slice_rev[i,:]-origin)
+        yprime = np.dot(V,slice_rev[i,:]-origin)
+        
+        slice_proj[i,0] = xprime
+        slice_proj[i,1] = yprime
+        
+    return slice_proj
+
+def another_orthogonal_projection(Slice_array,origin,normal):
+    slice_rev = Slice_array.T
+    
+    # n = normal/ np.linalg.norm(normal)
+    n = normal
+    #n /= np.sqrt((n**2).sum())
+    x = np.array([1,0,0])    
+    x = x - np.dot(x, n) * n
+    #x /= np.sqrt((x**2).sum())
+    
+    y = np.cross(n,x)
+    
+
+    slice_proj = np.zeros((slice_rev.shape[0],2))
+    for i in range(slice_rev.shape[0]):
+        # x = slice_rev[i,:]
+        # xprime = np.dot(U,x)
+        # yprime = np.dot(V,x)
+        
+        xprime = np.dot(x,slice_rev[i,:]-origin)
+        yprime = np.dot(y,slice_rev[i,:]-origin)
+        
+        # print(xprime,yprime)
         
         slice_proj[i,0] = xprime
         slice_proj[i,1] = yprime
@@ -312,7 +353,7 @@ def compute_on_slice_convex(data_file,i_vessel, dpoints, dvectors,pinfo,case):
     vectors = dvectors.get("vectors{}".format(i_vessel))[1]
     dslice = {}
     n_ = points.shape[0]
-    Lslice=[]
+    Lslice = np.zeros((n_-1,3))
     if n_ > 2:
         print(
             "### Compute on ",
@@ -341,23 +382,46 @@ def compute_on_slice_convex(data_file,i_vessel, dpoints, dvectors,pinfo,case):
             # Lmax.append(max_pressure)
             one_rev = orthogonal_projection(Slice_array,origin,normal)
             
-            # one_rev = Slice_array.T[:,:1]
-            # for k in one_rev.shape[0]:
-            #     project_slice[k,:] = np.dot(one_rev[k,:],normal)  
-                
-            hull = ConvexHull(one_rev,qhull_options="Qc")
-            A = hull.area
-            # hull = ConvexHull(Slice_array.T)
-            fig = plt.figure(figsize=(7, 7))
-            plt.scatter(one_rev[:,0],one_rev[:,1],marker = 'o')
+            
+            # Convex Hull : Perimeter and Area
+            hull = ConvexHull(one_rev)
+            HullP = hull.area # Perimeter of the convex hull (N-1 dimension)
+            HullArea = hull.volume # Area of the convex hull 
+            
+            
+            # Alpha shape
+            # distances = [dist(p1, p2) for p1, p2 in combinations(one_rev, 2)]
+            # alpha_crit = sum(distances) / len(distances)
+            # print(alpha_crit)
+            Alpha = alphashape.alphashape(one_rev,500)
+            Area = Alpha.area
+            P = Alpha.length
+            
+            # Define morphological metrics :
+            circularity = 4*np.pi*Area/(P*P)
+            convexity = Area/HullArea
+            
+            
+            Lslice[j,0] = Area
+            Lslice[j,1] = circularity
+            Lslice[j,2] = convexity
+            
+            
+            fig,ax = plt.subplots(figsize=(7, 7))
+            ax.scatter(one_rev[:,0],one_rev[:,1],marker = 'o')
+            ax
             for simplex in hull.simplices:
-                plt.plot(one_rev[simplex, 0], one_rev[simplex, 1],'k-')
+                ax.plot(one_rev[simplex, 0], one_rev[simplex, 1],'k-')
+            ax.add_patch(PolygonPatch(Alpha, alpha = 0.2))
             plt.show()
-            # plt.show()
-            Lslice.append(A)
-           
-            # tslice.append((origin_slice,geom.find_radius(origin_slice,Slice_array.T)))
-            print("   $$ Control point ", j, "Area :  = ", A)
+            print('\n')
+            print("   $$ Control point ", j, "Circularity :  = ", circularity)
+            print("   $$ Control point ", j, "Convex Hull Circularity :  = ", 4*np.pi*HullArea/(HullP*HullP))
+            print("   $$ Control point ", j, "Convexity :  = ",convexity)
+            print("   $$ Control point ", j, "Area :  = ", Area)
+            
+            
+
             
     else:
         Lslice = [0] * (len(points))
@@ -382,10 +446,14 @@ def get_list_files_dat(pinfo, case, num_cycle):
 
     num_cycle = str(num_cycle)
 
-    path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
-    os.chdir(path)
+    pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit"
+    mesh_size = "5"
+    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    for files_dir in list_files_dir:
+        if "mesh_size_" + mesh_size in files_dir:
+            pathwd = pathwd + "/" + files_dir
+    os.chdir(pathwd)
     onlyfiles = []
-
     for file in glob.glob("*.dat"):
         if pinfo + "_" + case + "_cycle" + num_cycle in file:
             onlyfiles.append(file)
@@ -405,13 +473,12 @@ def get_list_files_dat(pinfo, case, num_cycle):
         if not os.path.exists(newpath):
             os.makedirs(newpath)
 
-    return onlyfiles, indices
+    return onlyfiles, indices,pathwd
 
 
 
-def compute_radius(pinfo,case,num_cycle,step, dpoints,dvectors,i):
+def compute_radius(pinfo,case,num_cycle, dpoints,dvectors,i):
     
-    # importlib.reload(geom)
     
     
     os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
@@ -423,8 +490,8 @@ def compute_radius(pinfo,case,num_cycle,step, dpoints,dvectors,i):
 
     dslice={}
     
-    onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle) # Get the dat files for the patient and its case
-
+    onlydat, indices_dat,pathwd = get_list_files_dat(pinfo, case, num_cycle) # Get the dat files for the patient and its case
+    print(pathwd)
 
     filename = onlydat[0]
 
@@ -442,22 +509,44 @@ def compute_radius(pinfo,case,num_cycle,step, dpoints,dvectors,i):
     tp.new_layout()
     frame = tp.active_frame()
 
-    dir_file = (
-        "N:/vasospasm/"
-        + pinfo
-        + "/"
-        + case
-        + "/3-computational/hyak_submit/"
-        + filename
-    )
-
+    # dir_file = (
+    #     "N:/vasospasm/"
+    #     + pinfo
+    #     + "/"
+    #     + case
+    #     + "/3-computational/hyak_submit/"
+    #     + filename
+    # )
+    dir_file = pathwd + '/' + filename
+   
+    # data_file = tp.data.load_fluent(
+    #     case_filenames=[
+    #         "N:/vasospasm/"
+    #         + pinfo
+    #         + "/"
+    #         + case
+    #         + "/3-computational/hyak_submit/"
+    #         + pinfo
+    #         + "_"
+    #         + case
+    #         + ".cas"
+    #     ],
+    #     data_filenames=[dir_file],
+    # )
+    
+    # data_file = tp.data.load_fluent(
+    #     case_filenames=[
+    #         pathwd + '/' 
+    #         + pinfo
+    #         + "_"
+    #         + case
+    #         + ".cas"
+    #     ],
+    #     data_filenames=[dir_file],
+    # )
     data_file = tp.data.load_fluent(
         case_filenames=[
-            "N:/vasospasm/"
-            + pinfo
-            + "/"
-            + case
-            + "/3-computational/hyak_submit/"
+            pathwd + '/' 
             + pinfo
             + "_"
             + case
@@ -498,7 +587,7 @@ def compute_radius(pinfo,case,num_cycle,step, dpoints,dvectors,i):
 
 
 
-def get_dCS(pinfo,case,num_cycle,step,dpoints,dvectors,ddist):
+def get_dCS(pinfo,case,num_cycle,dpoints,dvectors):
 
     
     Lvessel=['L_MCA','R_MCA','L_A1','L_A2','R_A1','R_A2','L_P1','L_P2','R_P1','R_P2','BAS','L_ICA','R_ICA']
@@ -515,6 +604,7 @@ def get_dCS(pinfo,case,num_cycle,step,dpoints,dvectors,ddist):
             Verity[i,j] = (Lvessel[i] in Lvessel_comp[j])
     L_test = []
     L_ind = []
+    print(Verity)
     for i in range(len(Lvessel)):
         for j in range(len(Lvessel_comp)):
             if Verity[i,j] == 1:
@@ -524,10 +614,74 @@ def get_dCS(pinfo,case,num_cycle,step,dpoints,dvectors,ddist):
     dCS = {}    
     for k in range(len(L_ind)):
         i = L_ind[k]
-        dCS['slice{}'.format(i)] = compute_radius(pinfo,case,num_cycle,step, dpoints, dvectors, i)
+        dCS['slice{}'.format(i)] = compute_radius(pinfo,case,num_cycle, dpoints, dvectors, i)
     
     return dCS
 
     
+    
+def morphometric_cleaning(dCS,L_ind,dpoints,dvectors):
+    # dCS structure  : 
+        #dict of the slices of the vessel concerned by the pressure compute 
+        # Inside a point of a vessel : 3,1 list : Area, convexity, circularity:
+        # identify the slices which have a weak convexity*circularity criterion
+        # Create new dpoints and dvectors with only the points and normal which are reliable
+        # Use these two to compute pressure.
+        
+        
+    n_dCS,n_dpoints,n_dvectors = {},{},{}
+    #(Add everything to the main at some point)
+    for i in range(len(dCS)):
+        L_toremove = []
+        array_vessel = dCS.get("slice{}".format(L_ind[i]))
+        name_vessel = dpoints.get("points{}".format(L_ind[i]))[0]
+        for j in range(array_vessel.shape[0]):
+            criterion = array_vessel[j][1] * array_vessel[j][2]
+            if criterion < 0.89:
+                print(i,j)
+                print(array_vessel[j][1])
+                print(array_vessel[j][2])
+
+                
+                L_toremove.append(j)
+        len_vessel = dpoints.get("points{}".format(L_ind[i]))[1].shape[0]
+
+        L_tokeep = [i for i in range(len_vessel) if i not in L_toremove]
+        length_new = len_vessel-len(L_toremove)
+        new_points = np.zeros((length_new,3))
+        new_vectors =  np.zeros((length_new-1,3))
+        new_CS =  np.zeros((length_new-1,3))
+        index = 0
+        for k in L_tokeep:
+            new_points[index,:] = dpoints.get("points{}".format(L_ind[i]))[1][k,:]
+            
+            index+=1
+        index=0
+        for k in L_tokeep[:-1]:
+            new_vectors[index,:] = dvectors.get("vectors{}".format(L_ind[i]))[1][k,:]
+            new_CS[index,:] = dCS.get("slice{}".format(L_ind[i]))[k,:]
+
+            index+=1
+            
+        n_dCS['slice{}'.format(i)] = name_vessel,new_CS
+        n_dpoints['points{}'.format(i)] = name_vessel,new_points
+        n_dvectors['vectors{}'.format(i)] = name_vessel,new_vectors
+        
+    return n_dCS,n_dpoints,n_dvectors
+    
+    
+
+            
+        
+        
+            
+            
+            
+            
+            
+            
+            
+            
+
     
     

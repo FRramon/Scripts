@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul 13 11:50:26 2022
+Created on Thu Aug 18 09:46:53 2022
 
 @author: GALADRIEL_GUEST
 """
 
+
 # Script whose main function returns the actual divided geometry for the first variation
-# --> complete circle of Willis
+# --> complete circle of Willis but with 3 ACAs
 # small variations like hyplastic arteries etc. But no principal artery missing
 
 
@@ -23,7 +24,8 @@ import matplotlib.pyplot as plt
 import importlib
 
 
-
+import scipy
+import scipy.io
 
 import pickle
 
@@ -39,7 +41,7 @@ importlib.reload(geom)
 # %% Functions
 
 
-def division_ICA(pinfo, case, length):
+def division_ICA(pinfo, case, step):
     """
 
 
@@ -79,13 +81,13 @@ def division_ICA(pinfo, case, length):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "L_ACA" in files:
-            points_LACA = geom.space_array(files,length)
+            points_LACA = geom.get_spline_points(files, step)
         if "R_ACA" in files:
-            points_RACA = geom.space_array(files,length)
+            points_RACA = geom.get_spline_points(files, step)
         if "L_ICA_MCA" in files:
-            points_LICAMCA = geom.space_array(files,length)
+            points_LICAMCA = geom.get_spline_points(files, step)
         if "R_ICA_MCA" in files:
-            points_RICAMCA = geom.space_array(files,length)
+            points_RICAMCA = geom.get_spline_points(files, step)
 
     # LOAD .ctgr files (center, radius)
 
@@ -172,7 +174,7 @@ def division_ICA(pinfo, case, length):
 # ADD unique direction 
 # -> An ACA start from the bifurcation w/ ICA
 
-def division_ACA(pinfo, case, length):
+def division_ACA(pinfo, case, step):
     """
 
 
@@ -235,7 +237,7 @@ def division_ACA(pinfo, case, length):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "_ACA_A1" in files:
-            points_ACA_Acom = geom.space_array(files,length)
+            points_ACA_Acom = geom.get_spline_points(files, step)
             division_case='divided_acom'
             side_change=files[0]
             if side_change=='L':
@@ -245,69 +247,37 @@ def division_ACA(pinfo, case, length):
             print(other_side)
             for subfile in onlyfiles:
                 if 'ACA_A2' in subfile:
-                    points_ACA_A2 = geom.space_array(subfile,length)
+                    points_ACA_A2 = geom.get_spline_points(subfile, step)
                     
                 if other_side + '_ACA' in subfile:
-                    points_other_ACA = geom.space_array(subfile,length)
+                    points_other_ACA = geom.get_spline_points(subfile, step)
                 if 'Acom_posterior' in subfile:
-                    points_Acom_post=geom.space_array(subfile,length)
+                    points_Acom_post=geom.get_spline_points(subfile,step)
                 
         if 'L_ACA' in files:
             if len(files)==9:
                 division_case='regular'
                 for subfiles in onlyfiles:
                     if "Acom" in subfiles:
-                        points_Acom = geom.space_array(subfiles,length)
+                        points_Acom = geom.get_spline_points(subfiles, step)
                     if "L_ACA" in subfiles:
-                        points_LACA = geom.space_array(subfiles,length)
+                        points_LACA = geom.get_spline_points(subfiles, step)
                     if "R_ACA" in subfiles:
-                        points_RACA = geom.space_array(subfiles,length)
+                        points_RACA = geom.get_spline_points(subfiles, step)
+                    if "M_ACA" in subfiles:
+                        points_MACA = geom.get_spline_points(subfiles, step)
     
     for files in onlyfiles:
         if 'L_ICA_MCA' in files:
-            points_LICA_MCA=geom.space_array(files,length)
+            points_LICA_MCA=geom.get_spline_points(files,step)
         if 'R_ICA_MCA' in files:
-            points_RICA_MCA=geom.space_array(files,length)
+            points_RICA_MCA=geom.get_spline_points(files,step)
         
     print(division_case)
 
-    if division_case=='divided_acom':
-        
-    # STEP 1 : points ACA
-        #Left side
-        L_dir_Ls=np.min([np.linalg.norm(points_ACA_Acom[0]-x) for x in points_LICA_MCA])
-        L_dir_Le=np.min([np.linalg.norm(points_ACA_Acom[points_ACA_Acom.shape[0]-1]-x) for x in points_LICA_MCA])
-           
-        if L_dir_Le < L_dir_Ls:
-            print("ACA A1 inverted")
-            points_ACA_Acom=points_ACA_Acom[::-1]
-        
-        L_dir_Ls2=np.min([np.linalg.norm(points_ACA_A2[0]-x) for x in points_ACA_Acom])
-        L_dir_Le2=np.min([np.linalg.norm(points_ACA_A2[points_ACA_A2.shape[0]-1]-x) for x in points_ACA_Acom])
-           
-        
-        if L_dir_Le2 < L_dir_Ls2:
-            print("ACA A2 inverted")
-            points_ACA_A2=points_ACA_A2[::-1]
-        
-        # Right side
-        L_dir_Rs=np.min([np.linalg.norm(points_other_ACA[0]-x) for x in points_RICA_MCA])
-        L_dir_Re=np.min([np.linalg.norm(points_other_ACA[points_other_ACA.shape[0]-1]-x) for x in points_RICA_MCA])
-    
-        if L_dir_Re < L_dir_Rs:
-            print("right ACA inverted")
-            points_RACA=points_RACA[::-1]
-            
-      
-             
-        points_LA1=points_ACA_Acom
-        points_LA2=points_ACA_A2
-        
-        points_RA1,points_RA2=geom.bifurcation_and_radius_remove(points_other_ACA, points_Acom_post,center_Acom_post)
-        
-        
+
        
-    elif division_case=='regular':
+    if division_case=='regular':
         
         
         L_dir_Ls=np.min([np.linalg.norm(points_LACA[0]-x) for x in points_LICA_MCA])
@@ -323,10 +293,22 @@ def division_ACA(pinfo, case, length):
         if L_dir_Re < L_dir_Rs:
             print("right ACA inverted")
             points_RACA=points_RACA[::-1]
+            
+        L_dir_Ms=np.min([np.linalg.norm(points_MACA[0]-x) for x in points_Acom])
+        L_dir_Me=np.min([np.linalg.norm(points_MACA[points_MACA.shape[0]-1]-x) for x in points_Acom])
+           
+        if L_dir_Me < L_dir_Ms:
+            print("M ACA inverted")
+            points_LACA=points_LACA[::-1]
+            
+        # print(points_MACA)
+        # print(points_Acom[points_Acom.shape[0]//2,:])
           
         points_LA1,points_LA2=geom.bifurcation_and_radius_remove(points_LACA, points_Acom, center_Acom)
           
         points_RA1,points_RA2=geom.bifurcation_and_radius_remove(points_RACA, points_Acom,center_Acom)
+        
+        # points_MA1,points_MA2 = geom.bifurcation_one(points_MACA,points_Acom[points_Acom.shape[0]//2,:])
         
 
     fig = plt.figure(figsize=(7, 7))
@@ -353,6 +335,10 @@ def division_ACA(pinfo, case, length):
     ax.scatter(
         points_LA2[:, 0], points_LA2[:, 1], points_LA2[:, 2], label="LEFT ACA A2"
     )
+    ax.scatter(
+        points_MACA[:, 0], points_MACA[:, 1], points_MACA[:, 2], label="MIDDLE ACA"
+    )
+
 
     ax.view_init(30,60)
     ax.legend()
@@ -372,11 +358,55 @@ def division_ACA(pinfo, case, length):
     if points_RA2.shape[0] != 0:
         dpoints_divided["points{}".format(k)] = "R_A2", points_RA2
         k += 1
+    if points_MACA.shape[0] != 0:
+        dpoints_divided["points{}".format(k)] = "M_ACA", points_MACA
+        k += 1
+            
 
     return dpoints_divided
 
+def get_variation(pinfo, case):
 
-def division_PCA(pinfo, case, length):
+    dinfo = scipy.io.loadmat(
+        "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/case_info.mat"
+    )
+    variation = int(dinfo.get("variation_input"))
+    if (variation==3) or (variation==4):
+        variation = 4
+    elif (variation==5) or (variation==6):
+        variation = 5
+    elif (variation==7) or (variation==8):
+        variation = 7
+    elif variation == 9:
+        variation = 9
+
+    return variation
+
+
+def division_case_PCA(pinfo,case,step):
+    variation = get_variation(pinfo,case)
+    os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
+    print(variation)
+    if str(variation) == "9":
+        
+        module_name = "division_variation4" 
+        module = importlib.import_module(module_name)
+        print(module)
+        importlib.reload(module)
+        dpoints_divided = module.new_division_P_bas(pinfo,case,step)
+        print(dpoints_divided)
+    elif str(variation) == "9.4":
+        
+        module_name = "division_variation" + str(variation)[:-2]
+        module = importlib.import_module(module_name)
+
+        importlib.reload(module)
+        
+        dpoints_divided = module.division_PCA(pinfo,case,step)
+        
+    return dpoints_divided
+
+def division_PCA(pinfo, case, step):
     """
 
 
@@ -390,7 +420,7 @@ def division_PCA(pinfo, case, length):
     dpoints_divided : dict of the control points for every vessel
 
     """
-    print("called")
+
     dpoints_divided = {}
 
     pathctgr = (
@@ -452,7 +482,7 @@ def division_PCA(pinfo, case, length):
         # If one of the PCA is merged with the basilar : separation
 
         if "BAS_PCA" in files:
-            points_bas_pca = geom.space_array(files,length)
+            points_bas_pca = geom.get_spline_points(files, step)
             side_bas = files[0]
             if side_bas == "L":
                 other_side = "R"
@@ -462,14 +492,14 @@ def division_PCA(pinfo, case, length):
             print(other_side)
             for subfile in onlyfiles:
                 if other_side + '_PCA_P1' in subfile:
-                    points_non_bas_P1=geom.space_array(subfile,length)
+                    points_non_bas_P1=geom.get_spline_points(subfile, step)
                     division_case='nb_divided'
                     for subsubfile in onlyfiles:
                         if other_side + '_Pcom_PCA' in subsubfile:
-                            points_non_bas_pcompca=geom.space_array(subsubfile,length)
+                            points_non_bas_pcompca=geom.get_spline_points(subsubfile,step)
                 if (other_side + "_PCA") in subfile:
                     if len(subfile)==9:
-                        points_non_bas_pca = geom.space_array(subfile,length)
+                        points_non_bas_pca = geom.get_spline_points(subfile, step)
                         division_case='regular'
                     
 
@@ -477,12 +507,12 @@ def division_PCA(pinfo, case, length):
                 
                 
                 if side_bas + "_Pcom" in subfile:
-                    points_bas_Pcom = geom.space_array(subfile,length)
+                    points_bas_Pcom = geom.get_spline_points(subfile, step)
                     
                 if division_case=='regular':
                     if other_side + "_Pcom" in subfile:
                         
-                        points_Pcom = geom.space_array(subfile,length)
+                        points_Pcom = geom.get_spline_points(subfile, step)
 
             
             if division_case=='regular':
@@ -620,6 +650,8 @@ def division_PCA(pinfo, case, length):
                 k += 1
 
             return dpoints_divided
+        
+        
 
 
 def add_divided_arteries(dpoint_i, dpoints_div):
@@ -797,15 +829,15 @@ def createfinal_dicts(dpoint_i, indices):
 # %% Main
 
 
-def _main_(pinfo, case, length):
+def _main_(pinfo, case, step):
 
-    dpoint_i = geom.create_dpoint(pinfo, case, length)
+    dpoint_i = geom.create_dpoint(pinfo, case, step)
 
     # Step 2# Divide the Arteries
 
-    dpoints_divI = division_ICA(pinfo, case, length)
-    dpoints_divACA = division_ACA(pinfo, case, length)
-    dpoints_divPCA = division_PCA(pinfo, case, length)
+    dpoints_divI = division_ICA(pinfo, case, step)
+    dpoints_divACA = division_ACA(pinfo, case, step)
+    dpoints_divPCA = division_case_PCA(pinfo, case, step)
 
     dpoints = dpoint_i.copy()
 

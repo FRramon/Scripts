@@ -76,6 +76,55 @@ def get_spline_points(fname, step):
     return s_points
 
 
+def find_next(points,i,length):
+    k=i
+    norm = 0
+    x = points[i,:]
+    y = points[k,:]
+    while norm < length:
+        k+=1
+        y = points[k,:]
+        norm +=np.linalg.norm(x-y)
+        
+
+    return k-i
+
+def find_last(points,length):
+    i = points.shape[0]-1
+    k=i
+    norm = 0
+    x = points[i,:]
+    y = points[k,:]
+    while norm < length:
+        k-=1
+        y = points[k,:]
+        norm +=np.linalg.norm(x-y)
+        # print(norm)
+        
+
+    return i-k
+
+
+
+def space_array(fname,length):
+    
+    points_spline = get_spline_points(fname, 1)
+    i=0
+    L = []
+
+    while i<points_spline.shape[0]-find_last(points_spline,length):
+    
+        i+=find_next(points_spline,i,length)
+        L.append(i)
+        
+    points_spaced = np.array([points_spline[j,:] for j in L])
+
+        
+    return points_spaced
+
+
+
+
 def calculate_normal_vectors(points):
     """
 
@@ -140,7 +189,7 @@ def calculate_norms(vectors):
 #     return step_vessel
 
 
-def create_dpoint(pinfo, case, step):
+def create_dpoint(pinfo, case, length):
     """
 
 
@@ -179,7 +228,7 @@ def create_dpoint(pinfo, case, step):
     for file in onlyfiles:
 
         filename = file[:-4]
-        dpoint_i["points{}".format(i)] = filename, get_spline_points(file, step)
+        dpoint_i["points{}".format(i)] = filename, space_array(file,length)
         i += 1
     return dpoint_i
 

@@ -13,7 +13,7 @@ import numpy as np
 
 import main_pressure_project as press_pj
 import geometry_slice as geom
-import division_variation3 as variation
+import division_variation4 as variation
 import get_heatmap as hmp
 # importlib.reload(press_pj)
 # importlib.reload(geom)
@@ -82,10 +82,10 @@ def plot_CS(dCS,ddist,case,i,ax):
     
     
 
-def main(pinfo,step,num_cycle):
+def main(pinfo,length,num_cycle):
     
-    dpoints_bas ,dvectors_bas = variation._main_(pinfo,'baseline',step)
-    dpoints_vas ,dvectors_vas = variation._main_(pinfo,'vasospasm',step)
+    dpoints_bas ,dvectors_bas = variation._main_(pinfo,'baseline',length)
+    dpoints_vas ,dvectors_vas = variation._main_(pinfo,'vasospasm',length)
     # Replace by load dict & return theese dict in main project
     
     
@@ -190,7 +190,9 @@ def main(pinfo,step,num_cycle):
         
     
 if __name__ == '__main__':
-    main('pt2',10,2)
+    main('pt2',0.02,2)
+    
+    
         
         
         

@@ -33,9 +33,15 @@ def get_list_files_dat2(pinfo, case, num_cycle):
 
     num_cycle = str(num_cycle)
     print('bien cette fonction')
-    path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
-    os.chdir(path)
+    pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit"
+    mesh_size = "5"
+    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    for files_dir in list_files_dir:
+        if "mesh_size_" + mesh_size in files_dir:
+            pathwd = pathwd + "/" + files_dir
+    os.chdir(pathwd)
     onlyfiles = []
+    print(os.getcwd())
     for file in glob.glob("*.dat"):
         if pinfo + "_" + case + "_cycle" + num_cycle in file : 
             
@@ -43,13 +49,13 @@ def get_list_files_dat2(pinfo, case, num_cycle):
     indices = [l[13:-4] for l in onlyfiles]
 
 
-    return onlyfiles, indices
+    return onlyfiles, indices,pathwd
 
 
 
 def get_1_out(pinfo,case,num_cycle):
     
-    onlyfiles,indices = get_list_files_dat2(pinfo,case, num_cycle)
+    onlyfiles,indices,pathwd = get_list_files_dat2(pinfo,case, num_cycle)
     time_limit = [float(x[9:])/1000 for x in indices[:-31]][-1]
     
     dQ = {}
@@ -58,7 +64,7 @@ def get_1_out(pinfo,case,num_cycle):
     for name in glob.glob('*.out'):
         name_trunc = name[:-4]
         if name_trunc in names:
-            filename = 'N:/vasospasm/' + pinfo + '/' + case + '/3-computational/hyak_submit/' + name_trunc + '.out'
+            filename = pathwd + '/' + name_trunc + '.out'
     
     
                     
@@ -76,9 +82,9 @@ def get_1_out(pinfo,case,num_cycle):
             for i in range(len(L_Q)):
                 if type(L_Q[i]) != float:
                     print(type(L_Q[i]))
-            print(L_Q)
+            # print(L_Q)
             L_truncate = [int(x) for x in np.linspace(0,len(L_Q)-1,30)]
-            print(L_truncate)
+            # print(L_truncate)
             Q_final = [L_Q[L_truncate[i]] for i in range(len(L_truncate))]
             final_name = (name_trunc[0] + '_' + name_trunc[1:]).upper()
             dQ['Q_{}'.format(final_name)] = Q_final
@@ -87,17 +93,20 @@ def get_1_out(pinfo,case,num_cycle):
 
 def load_df(pinfo,case,num_cycle):
     
-    onlyfiles,indices = get_list_files_dat2(pinfo,case, num_cycle)
+    onlyfiles,indices,pathwd = get_list_files_dat2(pinfo,case, num_cycle)
+    print(indices)
     timl = [float(x.split('-')[-1])/1000 for x in indices[:-31]][-1]
 
-   
+    os.chdir(pathwd)
+    print(os.getcwd())
     dQ = {}
     
     names = ['la1','lp1','ra1','rp1']
     for name in glob.glob('*.out'):
         name_trunc = name[:-4]
         if name_trunc in names:
-            filename = 'N:/vasospasm/' + pinfo + '/' + case + '/3-computational/hyak_submit/' + name_trunc + '.out'
+            #filename = 'N:/vasospasm/' + pinfo + '/' + case + '/3-computational/hyak_submit/' +
+            filename = name_trunc + '.out'
             L_Q =[]
             df = pd.read_csv(filename,skiprows = 3,sep = ' ',names = ['Time_step', 'Flow','Velmax','flow_time'])
 

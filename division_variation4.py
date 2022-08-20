@@ -49,7 +49,7 @@ importlib.reload(geom)
 # %% Functions
 
 
-def division_ICA(pinfo, case, step):
+def division_ICA(pinfo, case, length):
     """
 
 
@@ -87,13 +87,13 @@ def division_ICA(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "L_ACA" in files:
-            points_LACA = geom.get_spline_points(files, step)
+            points_LACA = geom.space_array(files, length)
         if "R_ACA" in files:
-            points_RACA = geom.get_spline_points(files, step)
+            points_RACA = geom.space_array(files, length)
         if "L_ICA_MCA" in files:
-            points_LICAMCA = geom.get_spline_points(files, step)
+            points_LICAMCA = geom.space_array(files, length)
         if "R_ICA_MCA" in files:
-            points_RICAMCA = geom.get_spline_points(files, step)
+            points_RICAMCA = geom.space_array(files, length)
 
     # LOAD .ctgr files (center, radius)
 
@@ -176,7 +176,7 @@ def division_ICA(pinfo, case, step):
     return dpoints_divided
 
 
-def division_RP(pinfo, case, step):
+def division_RP(pinfo, case, length):
     """
 
 
@@ -221,11 +221,11 @@ def division_RP(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "Pcom_PCA" in files:
-            points_vessel = geom.get_spline_points(files, step)
+            points_vessel = geom.space_array(files, length)
         if "BAS_PCA" in files:
-            points_bas = geom.get_spline_points(files, step)
+            points_bas = geom.space_array(files, length)
         if other_side + "_Pcom" in files:
-            points_pcom = geom.get_spline_points(files, step)
+            points_pcom = geom.space_array(files, length)
 
     # LOAD .ctgr files (center, radius)
 
@@ -335,7 +335,7 @@ def division_RP(pinfo, case, step):
     return dpoints_divided
 
 
-def division_A(pinfo, case, step):
+def division_A(pinfo, case, length):
     """
 
 
@@ -405,7 +405,7 @@ def division_A(pinfo, case, step):
             center_A2 = geom.get_center_radius_ulti(files, pinfo, case)
 
  
-    folder = "_segmentation_cropACA" # HERE ADD '_cropACA' if issue with path&model size
+    folder = "_segmentation" # HERE ADD '_cropACA' if issue with path&model size
     pathpath = (
         "N:/vasospasm/"
         + pinfo
@@ -425,7 +425,7 @@ def division_A(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "_ACA_A1" in files:
-            points_ACA_Acom = geom.get_spline_points(files, step)
+            points_ACA_Acom = geom.space_array(files, length)
             division_case='divided_acom'
             side_change=files[0]
             if side_change=='L':
@@ -435,29 +435,29 @@ def division_A(pinfo, case, step):
             # print(other_side)
             for subfile in onlyfiles:
                 if 'ACA_A2' in subfile:
-                    points_ACA_A2 = geom.get_spline_points(subfile, step)
+                    points_ACA_A2 = geom.space_array(subfile, length)
                     
                 if other_side + '_ACA' in subfile:
-                    points_other_ACA = geom.get_spline_points(subfile, step)
+                    points_other_ACA = geom.space_array(subfile, length)
                 if 'Acom_posterior' in subfile:
-                    points_Acom_post=geom.get_spline_points(subfile,step)
+                    points_Acom_post=geom.space_array(subfile, length)
                 
         if 'L_ACA' in files:
             if len(files)==9:
                 division_case='regular'
                 for subfiles in onlyfiles:
                     if "Acom" in subfiles:
-                        points_Acom = geom.get_spline_points(subfiles, step)
+                        points_Acom = geom.space_array(subfiles, length)
                     if "L_ACA" in subfiles:
-                        points_LACA = geom.get_spline_points(subfiles, step)
+                        points_LACA = geom.space_array(subfiles, length)
                     if "R_ACA" in subfiles:
-                        points_RACA = geom.get_spline_points(subfiles, step)
+                        points_RACA = geom.space_array(subfiles, length)
     
     for files in onlyfiles:
         if 'L_ICA_MCA' in files:
-            points_LICA_MCA=geom.get_spline_points(files,step)
+            points_LICA_MCA=geom.space_array(files, length)
         if 'R_ICA_MCA' in files:
-            points_RICA_MCA=geom.get_spline_points(files,step)
+            points_RICA_MCA=geom.space_array(files, length)
         
     print(division_case)
 
@@ -566,7 +566,7 @@ def division_A(pinfo, case, step):
     return dpoints_divided
 
 
-def new_division_P_bas(pinfo, case, step):
+def new_division_P_bas(pinfo, case, length):
     """
 
 
@@ -630,16 +630,16 @@ def new_division_P_bas(pinfo, case, step):
         # If one of the PCA is merged with the basilar : separation
 
         if "BAS_PCA" in files:
-            points_bas_pca = geom.get_spline_points(files, step)
+            points_bas_pca = geom.space_array(files, length)
             side_bas = files[0]
 
             for subfile in onlyfiles:
 
                 if side_bas + "_Pcom" in subfile:
-                    points_target = geom.get_spline_points(subfile, step)
+                    points_target = geom.space_array(subfile, length)
 
                 if "Pcom_PCA" in subfile:
-                    points_otherside = geom.get_spline_points(subfile, step)
+                    points_otherside = geom.space_array(subfile, length)
 
             
             points_basP1,points_P2=geom.bifurcation_and_radius_remove(points_bas_pca, points_target, center_pcom)
@@ -922,17 +922,17 @@ def createfinal_dicts(dpoint_i, indices):
 # %% Main
 
 
-def _main_(pinfo, case, step):
+def _main_(pinfo, case, length):
 
     print("patient info : ", pinfo + ' ' + case)
-    dpoint_i = geom.create_dpoint(pinfo, case, step)
+    dpoint_i = geom.create_dpoint(pinfo, case, length)
 
     # Step 2# CREATE NEW DIVIDED VESSELS
 
-    dpoints_divI = division_ICA(pinfo, case, step)
-    dpoints_divACA = division_A(pinfo, case, step)
-    dpoints_divLPCA = new_division_P_bas(pinfo, case, step)
-    dpoints_divRP = division_RP(pinfo, case, step)
+    dpoints_divI = division_ICA(pinfo, case, length)
+    dpoints_divACA = division_A(pinfo, case, length)
+    dpoints_divLPCA = new_division_P_bas(pinfo, case, length)
+    dpoints_divRP = division_RP(pinfo, case, length)
 
     dpoints = dpoint_i.copy()
 

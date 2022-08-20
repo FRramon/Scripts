@@ -65,7 +65,7 @@ def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case,
     dnorms = {}
     ddist = {}
     dvectors = {}
-    onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle)
+    onlydat, indices_dat,pathwd = get_list_files_dat(pinfo, case, num_cycle)
     # print(indices_dat[i_dat])
     # Inverse the order of the points if the pressure is not decreasing
 
@@ -114,6 +114,53 @@ def get_distance(vectors):
     return dist
 
 
+# def get_list_files_dat(pinfo, case, num_cycle):
+#     """
+
+
+#     Parameters
+#     ----------
+#     pinfo : str, patient information, composed of pt/vsp + number.
+#     num_cycle : int, number of the cycle computed
+#     case : str, baseline or vasospasm
+
+#     Returns
+#     -------
+#     onlyfiles : list of .dat files for the current patient, for the case and cycle wanted.
+#     """
+
+#     num_cycle = str(num_cycle)
+
+#     path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
+#     os.chdir(path)
+#     onlyfiles = []
+
+#     for file in glob.glob("*.dat"):
+#         if pinfo + "_" + case + "_cycle" + num_cycle in file:
+#             onlyfiles.append(file)
+#     indices = [l[13:-4] for l in onlyfiles]
+
+#     for i in range(len(indices)):
+#         newpath = (
+#             "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
+#             + pinfo
+#             + "/"
+#             + case
+#             + "/cycle_"
+#             + num_cycle
+#             + "/plot_"
+#             + indices[i]
+#         )
+#         if not os.path.exists(newpath):
+#             os.makedirs(newpath)
+
+#     return onlyfiles, indices
+
+
+
+
+
+
 def get_list_files_dat(pinfo, case, num_cycle):
     """
 
@@ -131,10 +178,15 @@ def get_list_files_dat(pinfo, case, num_cycle):
 
     num_cycle = str(num_cycle)
 
-    path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
-    os.chdir(path)
+    pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
+    mesh_size = "5"
+    os.chdir(pathwd)
+    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    for files_dir in list_files_dir:
+        if "mesh_size_" + mesh_size in files_dir:
+            pathwd = pathwd + "/" + files_dir
+    os.chdir(pathwd)
     onlyfiles = []
-
     for file in glob.glob("*.dat"):
         if pinfo + "_" + case + "_cycle" + num_cycle in file:
             onlyfiles.append(file)
@@ -154,7 +206,23 @@ def get_list_files_dat(pinfo, case, num_cycle):
         if not os.path.exists(newpath):
             os.makedirs(newpath)
 
-    return onlyfiles, indices
+    return onlyfiles, indices,pathwd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def save_dict(dico, name):
@@ -206,6 +274,8 @@ def get_variation(pinfo, case):
         variation = 5
     elif (variation==7) or (variation==8):
         variation = 7
+    elif variation == 9:
+        variation = 9
 
     return variation
 
@@ -645,7 +715,7 @@ def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
 
     Ldist = []
 
-    onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
+    onlydat, indices,pathwd = get_list_files_dat(pinfo, case, num_cycle)
     # print(indices)
     len_vessel = (
         dpressure.get("{}".format(indices[0]))
@@ -859,7 +929,7 @@ def plot_R(dpressure,ddist,dpoints, i_vessel, pinfo, case,num_cycle, ax,ax2):
 
     Ldist = []
 
-    onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
+    onlydat, indices,pathwd = get_list_files_dat(pinfo, case, num_cycle)
     len_vessel = (
         dpressure.get("{}".format(indices[0]))
         .get("pressure{}".format(i_vessel))[1][1]
@@ -1063,16 +1133,17 @@ def main():
     print("$ Select computing cases\n")
     num_cycle = int(input("Which cycle ? 1,2,3 or 4\n"))
 
-    onlydat, indices_dat = get_list_files_dat(pinfo, case, num_cycle) # Get the dat files for the patient and its case
+    onlydat, indices_dat,pathwd = get_list_files_dat(pinfo, case, num_cycle) # Get the dat files for the patient and its case
 
     for k in range(len(onlydat)):
         print(k, ": " + indices_dat[k][9:-3] + ":" + indices_dat[k][11:] + " s")
     print("a : one period (30 time steps) \n")
     select_file = input("which time step?\n")
 
-    print("$ Step $\n")
-    step_in = input()
-    step=int(step_in)
+    print("Which length between to points (in every artery) ? ")
+    print('\n')
+    step_in = input('-->')
+    step=float(step_in)
 
     # Load a different module of the control points extraction and sorting depending on the patient variation
     
@@ -1128,22 +1199,33 @@ def main():
         tp.new_layout()
         frame = tp.active_frame()
 
-        dir_file = (
-            "N:/vasospasm/"
-            + pinfo
-            + "/"
-            + case
-            + "/3-computational/hyak_submit/"
-            + filename
-        )
+        # dir_file = (
+        #     "N:/vasospasm/"
+        #     + pinfo
+        #     + "/"
+        #     + case
+        #     + "/3-computational/hyak_submit/"
+        #     + filename
+        # )
+        dir_file = pathwd + '/' + filename
 
+        # data_file = tp.data.load_fluent(
+        #     case_filenames=[
+        #         "N:/vasospasm/"
+        #         + pinfo
+        #         + "/"
+        #         + case
+        #         + "/3-computational/hyak_submit/"
+        #         + pinfo
+        #         + "_"
+        #         + case
+        #         + ".cas"
+        #     ],
+        #     data_filenames=[dir_file],
+        # )
         data_file = tp.data.load_fluent(
             case_filenames=[
-                "N:/vasospasm/"
-                + pinfo
-                + "/"
-                + case
-                + "/3-computational/hyak_submit/"
+                pathwd + '/' 
                 + pinfo
                 + "_"
                 + case

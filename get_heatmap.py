@@ -15,12 +15,16 @@ import matplotlib.pyplot as plt
 import pickle
 import importlib
 import pandas as pd
+pd.options.display.float_format = '{:.2f}'.format
+
+
+
 import seaborn as sns
 
 import main_pressure_project as press_pj
 import geometry_slice as geom
 import division_variation3 as variation
-import test_separation_radius as cross_section
+import get_cross_section as cross_section
 importlib.reload(press_pj)
 importlib.reload(geom)
 importlib.reload(variation)
@@ -63,6 +67,9 @@ def load_dict(name):
         b = pickle.load(handle)
     return b
 
+
+
+
 def get_list_files_dat(pinfo, case, num_cycle):
     """
 
@@ -80,10 +87,15 @@ def get_list_files_dat(pinfo, case, num_cycle):
 
     num_cycle = str(num_cycle)
 
-    path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
-    os.chdir(path)
+    pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
+    mesh_size = "5"
+    os.chdir(pathwd)
+    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    for files_dir in list_files_dir:
+        if "mesh_size_" + mesh_size in files_dir:
+            pathwd = pathwd + "/" + files_dir
+    os.chdir(pathwd)
     onlyfiles = []
-
     for file in glob.glob("*.dat"):
         if pinfo + "_" + case + "_cycle" + num_cycle in file:
             onlyfiles.append(file)
@@ -351,13 +363,13 @@ def get_ultimate_values(dpoints_bas,tab_pressure_bas,tab_pressure_vas,tab_resist
     ulti_resist_bas = tab_resistance_bas[dist_opti_bas,1]
     ulti_press_bas = tab_pressure_bas[dist_opti_bas]
     
-    percent_resist = 100*(ulti_resist - ulti_resist_bas)/ulti_resist_bas
-    percent_press = 100*(ulti_press - ulti_press_bas)/ulti_press_bas
+    percent_resist = abs(100*(ulti_resist - ulti_resist_bas)/ulti_resist_bas)
+    percent_press = abs(100*(ulti_press - ulti_press_bas)/ulti_press_bas)
     
     ulti_Q = Q_vas
     ulti_Q_bas = Q_bas
     
-    percent_Q = (ulti_Q-ulti_Q_bas)/ulti_Q_bas
+    percent_Q = abs(100*(ulti_Q-ulti_Q_bas)/ulti_Q_bas)
     
     # data = {'Vasospasm pressure': ulti_press,
     #     'Baseline pressure': ulti_press_bas,
@@ -432,22 +444,25 @@ def plot_heatmap(pinfo,num_cycle,dpressure_bas,dpressure_vas,ddist_bas,ddist_vas
     
     # ax = sns.heatmap(df,annot=True, cmap =plt.cm.Blues, fmt='.2f',linewidth=0.3, cbar_kws={"shrink": .8})
     
-    f,(ax1,ax2,ax3) = plt.subplots(1,3,figsize = (15,10))
+    f,(ax1,ax2,ax3,ax4) = plt.subplots(1,4,figsize = (15,10))
     
     plt.suptitle("Final rates for "+ pinfo, fontsize = 20)
-    sns.heatmap(df.loc[:,['pressure baseline','pressure vasospasm','Final pressure rate']],annot = True,cmap =plt.cm.Blues,linewidth=0.3,ax=ax1)
-    # g1.set_ylabel('')
-    # g1.set_xlabel('')
-    sns.heatmap(df.loc[:,['flowrate baseline','flowrate vasospasm','Final flowrate rate']],annot = True,cmap =plt.cm.Blues,linewidth=0.3,ax=ax2)
-    # g2.set_ylabel('')
-    # g2.set_xlabel('')
+    sns.heatmap(df.loc[:,['pressure baseline','pressure vasospasm']],annot = True,cmap =plt.cm.Blues,fmt = '.2f',linewidth=0.5,ax=ax1)
+   
+    sns.heatmap(df.loc[:,['flowrate baseline','flowrate vasospasm']],annot = True,cmap =plt.cm.Blues,linewidth=0.5,ax=ax2)
+  
     ax2.set_yticks([])
-    sns.heatmap(df.loc[:,['resistance vasospasm','resistance baseline','Final resistance rate']],annot = True,cmap =plt.cm.Blues,linewidth=0.3,ax=ax3)
-    # g3.set_ylabel('')
-    # g3.set_xlabel('')
+    sns.heatmap(df.loc[:,['resistance baseline','resistance vasospasm']],annot = True,cmap =plt.cm.Blues,linewidth=0.5,ax=ax3)
+
     ax3.set_yticks([])
+    sns.heatmap(df.loc[:,['Final pressure rate','Final flowrate rate','Final resistance rate']],annot = True,fmt ='.2f',cmap =plt.cm.Blues,linewidth=0.5,ax=ax4)
+    for t in ax4.texts: t.set_text(t.get_text() + " %")
+    ax4.set_yticks([])
+
+    plt.savefig("N:/vasospasm/pressure_pytec_scripts/plots_8_4/final_rates" + pinfo)
     
     plt.tight_layout()
+    
 
 #%% 
 
