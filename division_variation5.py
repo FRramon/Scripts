@@ -51,7 +51,7 @@ importlib.reload(geom)
 
 
 
-def division_ICA(pinfo, case, step):
+def division_ICA(pinfo, case, length):
     """
 
 
@@ -89,9 +89,9 @@ def division_ICA(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "L_ACA" in files:
-            points_LACA = geom.get_spline_points(files, step)
+            points_LACA = geom.space_array(files,length)
         if "R_ACA" in files:
-            points_RACA = geom.get_spline_points(files, step)
+            points_RACA = geom.space_array(files,length)
        
             
             
@@ -108,9 +108,9 @@ def division_ICA(pinfo, case, step):
         
     for files in onlyfiles:
         if missing_side + "_ICA_MCA" in files:
-            points_m_ICAMCA = geom.get_spline_points(files, step)
+            points_m_ICAMCA = geom.space_array(files,length)
         if nmssg + "_ICA_MCA" in files:
-            points_nm_ICAMCA = geom.get_spline_points(files, step)
+            points_nm_ICAMCA = geom.space_array(files,length)
             
     
     pathctgr = (
@@ -256,7 +256,7 @@ def division_ICA(pinfo, case, step):
     return dpoints_divided
 
 
-def division_ACAs(pinfo, case, step):
+def division_ACAs(pinfo, case, length):
     """
 
 
@@ -295,9 +295,9 @@ def division_ACAs(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "L_ACA" in files:
-            points_LACA = geom.get_spline_points(files, step)
+            points_LACA = geom.space_array(files,length)
         if "R_ACA" in files:
-            points_RACA = geom.get_spline_points(files, step)
+            points_RACA = geom.space_array(files,length)
        
             
             
@@ -314,7 +314,7 @@ def division_ACAs(pinfo, case, step):
         
     for files in onlyfiles:
         if nmssg + "_ACA" in files:
-            points_nm_ICA_MCA = geom.get_spline_points(files, step)
+            points_nm_ICA_MCA = geom.space_array(files,length)
 
  
     pathctgr = (
@@ -443,7 +443,7 @@ def division_ACAs(pinfo, case, step):
     return dpoints_divided
 
 
-def division_PCA(pinfo, case, step):
+def division_PCA(pinfo, case, length):
     """
 
 
@@ -519,7 +519,7 @@ def division_PCA(pinfo, case, step):
         # If one of the PCA is merged with the basilar : separation
 
         if "BAS_PCA" in files:
-            points_bas_pca = geom.get_spline_points(files, step)
+            points_bas_pca = geom.space_array(files,length)
             side_bas = files[0]
             if side_bas == "L":
                 other_side = "R"
@@ -529,14 +529,14 @@ def division_PCA(pinfo, case, step):
             print(other_side)
             for subfile in onlyfiles:
                 if other_side + '_PCA_P1' in subfile:
-                    points_non_bas_P1=geom.get_spline_points(subfile, step)
+                    points_non_bas_P1=geom.space_array(subfile,length)
                     division_case='nb_divided'
                     for subsubfile in onlyfiles:
                         if other_side + '_Pcom_PCA' in subsubfile:
-                            points_non_bas_pcompca=geom.get_spline_points(subsubfile,step)
+                            points_non_bas_pcompca=geom.space_array(subsubfile,length)
                 if (other_side + "_PCA") in subfile:
                     if len(subfile)==9:
-                        points_non_bas_pca = geom.get_spline_points(subfile, step)
+                        points_non_bas_pca = geom.space_array(subfile,length)
                         division_case='regular'
                     
 
@@ -544,12 +544,12 @@ def division_PCA(pinfo, case, step):
                 
                 
                 if side_bas + "_Pcom" in subfile:
-                    points_bas_Pcom = geom.get_spline_points(subfile, step)
+                    points_bas_Pcom = geom.space_array(subfile,length)
                     
                 if division_case=='regular':
                     if other_side + "_Pcom" in subfile:
                         
-                        points_Pcom = geom.get_spline_points(subfile, step)
+                        points_Pcom = geom.space_array(subfile,length)
             print(points_bas_Pcom)
             
             if division_case=='regular':
@@ -861,7 +861,7 @@ def createfinal_dicts(dpoint_i, indices):
             dpoint_i.get("points{}".format(i))[1],
         )
         dpoints["points{}".format(j)] = filename, points
-        dvectors["vectors{}".format(j)] = filename, calculate_normal_vectors(points)
+        dvectors["vectors{}".format(j)] = filename, geom.calculate_normal_vectors(points)
         j += 1
     return dpoints, dvectors
 
@@ -869,15 +869,15 @@ def createfinal_dicts(dpoint_i, indices):
 # %% Main
 
 
-def _main_(pinfo, case, step):
+def _main_(pinfo, case, length):
 
-    dpoint_i = geom.create_dpoint(pinfo, case, step)
+    dpoint_i = geom.create_dpoint(pinfo, case, length)
 
     # Step 2# Divide
 
-    dpoints_divI = division_ICA(pinfo, case, step)
-    dpoints_divACA = division_ACAs(pinfo, case, step)
-    dpoints_divPCA = division_PCA(pinfo, case, step)
+    dpoints_divI = division_ICA(pinfo, case, length)
+    dpoints_divACA = division_ACAs(pinfo, case, length)
+    dpoints_divPCA = division_PCA(pinfo, case, length)
 
     dpoints = dpoint_i.copy()
 

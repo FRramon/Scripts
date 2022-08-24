@@ -3,7 +3,18 @@
 Created on Thu Aug 11 12:24:51 2022
 
 @author: GALADRIEL_GUEST
+
+This script make a cleaning of the slices that are made in tecplot.
+It extract the slices according to the set of points and vectors in input.
+For each slice, the x,y,z coordinate of the points enclosed are extracted, and 
+a projection of the slice in the slice plan if effectuated, to get a set of 2d points.
+Then, the convex hull area is calculated from scipy, and the approximate area is computed from the 
+alphashape module. From these two values, the convexity of the slice is computed.
+The circularity of the slice is also extracted.
+To avoid any irregular slice, all slices which present a product of circularity by convexity inferior to 0.9 are removed.
+After the cleaning, the new set of points and vectors are returned.
 """
+
 import importlib
 import glob
 import os as os
@@ -39,29 +50,14 @@ from descartes import PolygonPatch
 import math
 from itertools import combinations
 
-
-
 #%%
 os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
 
 import geometry_slice as geom
 import division_variation4 as variation
-
 importlib.reload(geom)
 
 #%%
-
-# def get_slice(pinfo,case,i):
-    
-#     return slice_array
-
-step = 10
-num_cycle = 2
-pinfo = 'pt2'
-# dpoints_bas ,dvectors_bas = variation._main_(pinfo,'baseline',step)
-# dpoints_vas ,dvectors_vas = variation._main_(pinfo,'vasospasm',step)
-#  # Replace by load dict & return theese dict in main project
- 
 
 
 def data_coor(data_file,pinfo,case):
@@ -398,25 +394,33 @@ def compute_on_slice_convex(data_file,i_vessel, dpoints, dvectors,pinfo,case):
             P = Alpha.length
             
             # Define morphological metrics :
-            circularity = 4*np.pi*Area/(P*P)
-            convexity = Area/HullArea
+            if P != 0:
+                circularity = 4*np.pi*Area/(P*P)
+            else:
+                circularity = 0
+            if HullArea !=0:
+                convexity = Area/HullArea
+            else: 
+                convexity = 0
             
             
             Lslice[j,0] = Area
             Lslice[j,1] = circularity
             Lslice[j,2] = convexity
             
-            
-            fig,ax = plt.subplots(figsize=(7, 7))
-            ax.scatter(one_rev[:,0],one_rev[:,1],marker = 'o')
-            ax
-            for simplex in hull.simplices:
-                ax.plot(one_rev[simplex, 0], one_rev[simplex, 1],'k-')
-            ax.add_patch(PolygonPatch(Alpha, alpha = 0.2))
-            plt.show()
+            if P!=0 and circularity !=0 :
+                fig,ax = plt.subplots(figsize=(7, 7))
+                ax.scatter(one_rev[:,0],one_rev[:,1],marker = 'o')
+                
+                for simplex in hull.simplices:
+                    ax.plot(one_rev[simplex, 0], one_rev[simplex, 1],'k-')
+                
+                
+                ax.add_patch(PolygonPatch(Alpha, alpha = 0.2))
+                plt.show()
             print('\n')
             print("   $$ Control point ", j, "Circularity :  = ", circularity)
-            print("   $$ Control point ", j, "Convex Hull Circularity :  = ", 4*np.pi*HullArea/(HullP*HullP))
+            # print("   $$ Control point ", j, "Convex Hull Circularity :  = ", 4*np.pi*HullArea/(HullP*HullP))
             print("   $$ Control point ", j, "Convexity :  = ",convexity)
             print("   $$ Control point ", j, "Area :  = ", Area)
             
@@ -447,11 +451,11 @@ def get_list_files_dat(pinfo, case, num_cycle):
     num_cycle = str(num_cycle)
 
     pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit"
-    mesh_size = "5"
-    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
-    for files_dir in list_files_dir:
-        if "mesh_size_" + mesh_size in files_dir:
-            pathwd = pathwd + "/" + files_dir
+    # mesh_size = "5"
+    # list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    # for files_dir in list_files_dir:
+    #     if "mesh_size_" + mesh_size in files_dir:
+    #         pathwd = pathwd + "/" + files_dir
     os.chdir(pathwd)
     onlyfiles = []
     for file in glob.glob("*.dat"):
@@ -616,7 +620,7 @@ def get_dCS(pinfo,case,num_cycle,dpoints,dvectors):
         i = L_ind[k]
         dCS['slice{}'.format(i)] = compute_radius(pinfo,case,num_cycle, dpoints, dvectors, i)
     
-    return dCS
+    return dCS,L_ind
 
     
     
@@ -637,7 +641,7 @@ def morphometric_cleaning(dCS,L_ind,dpoints,dvectors):
         name_vessel = dpoints.get("points{}".format(L_ind[i]))[0]
         for j in range(array_vessel.shape[0]):
             criterion = array_vessel[j][1] * array_vessel[j][2]
-            if criterion < 0.89:
+            if criterion < 0.9:
                 print(i,j)
                 print(array_vessel[j][1])
                 print(array_vessel[j][2])
@@ -668,17 +672,45 @@ def morphometric_cleaning(dCS,L_ind,dpoints,dvectors):
         n_dvectors['vectors{}'.format(i)] = name_vessel,new_vectors
         
     return n_dCS,n_dpoints,n_dvectors
-    
-    
 
+
+# points_test = n_dp.get("points0")[1]
+
+# fig = plt.figure(figsize=(7, 7))
+# ax = fig.add_subplot(111, projection="3d")
+# ax.grid()
+
+# ax.scatter(points_test[:,0],points_test[:,1],points_test[:,2])
             
         
-        
+# pinfo = 'pt7'
+# case = 'baseline'
+# num_cycle = 2
+# dpoints_d = dpoints_7_bas
+# dvectors_d = dvectors_7_bas
+# dCS, L_ind = cross_section.get_dCS(pinfo, case, num_cycle, dpoints_d, dvectors_d)
+# n_dcs_7_bas,dpoints_u,dvectors_u = cross_section.morphometric_cleaning(dCS, L_ind, dpoints_d, dvectors_d)
+
+# case = 'vasospasm'
+# dpoints_d = dpoints_7_vas
+# dvectors_d = dvectors_7_vas
+# dCS, L_ind = cross_section.get_dCS(pinfo, case, num_cycle, dpoints_d, dvectors_d)
+# n_dcs_7_vas,dpoints_u,dvectors_u = cross_section.morphometric_cleaning(dCS, L_ind, dpoints_d, dvectors_d)
+
+# for i in range(len(n_dcs_7_bas)):
+#     fig, ax = plt.subplots()
+#     data_bas = n_dcs_7_bas.get('slice{}'.format(i))[1][:,0]
+#     data_vas = n_dcs_7_vas.get('slice{}'.format(i))[1][:,0]
+#     print(data_bas)
+#     abscisse = np.linspace(0,len(data_bas),len(data_bas))
+#     abscisse2 = np.linspace(0,len(data_vas),len(data_vas))
+#     ax.plot(abscisse,data_bas,label = "baseline case")
+#     ax.plot(abscisse2,data_vas, label= "vasospasm case")
+#     ax.set_title(n_dcs_7_bas.get("slice{}".format(i)[0]))
+#     ax.legend()
+#     plt.show()
             
-            
-            
-            
-            
+# plt.show()        
             
             
             

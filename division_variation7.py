@@ -17,10 +17,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import importlib
-
-
-
-
 import pickle
 
 #%% Import intern geometric module
@@ -34,7 +30,7 @@ importlib.reload(geom)
 #%% Functions
 
 
-def division_ICA(pinfo, case, step):
+def division_ICA(pinfo, case, length):
     """
 
 
@@ -42,6 +38,7 @@ def division_ICA(pinfo, case, step):
     ----------
     pinfo : str, example : 'pt2' , 'vsp7'
     case : str, 'baseline' or 'vasospasm'
+    length : the length between each points
 
     Returns
     -------
@@ -74,13 +71,13 @@ def division_ICA(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "L_ACA" in files:
-            points_LACA = geom.get_spline_points(files, step)
+            points_LACA = geom.space_array(files,length)
         if "R_ACA" in files:
-            points_RACA = geom.get_spline_points(files, step)
+            points_RACA = geom.space_array(files,length)
         if "L_ICA_MCA" in files:
-            points_LICAMCA = geom.get_spline_points(files, step)
+            points_LICAMCA = geom.space_array(files,length)
         if "R_ICA_MCA" in files:
-            points_RICAMCA = geom.get_spline_points(files, step)
+            points_RICAMCA = geom.space_array(files,length)
 
     # LOAD .ctgr files (center, radius)
 
@@ -164,10 +161,9 @@ def division_ICA(pinfo, case, step):
 
     return dpoints_divided
 
-# ADD unique direction 
 # -> An ACA start from the bifurcation w/ ICA
 
-def division_ACA(pinfo, case, step):
+def division_ACA(pinfo, case, length):
     """
 
 
@@ -230,7 +226,7 @@ def division_ACA(pinfo, case, step):
         onlyfiles.append(file)
     for files in onlyfiles:
         if "_ACA_A1" in files:
-            points_ACA_Acom = geom.get_spline_points(files, step)
+            points_ACA_Acom = geom.space_array(files,length)
             division_case='divided_acom'
             side_change=files[0]
             if side_change=='L':
@@ -240,29 +236,29 @@ def division_ACA(pinfo, case, step):
             print(other_side)
             for subfile in onlyfiles:
                 if 'ACA_A2' in subfile:
-                    points_ACA_A2 = geom.get_spline_points(subfile, step)
+                    points_ACA_A2 = geom.space_array(subfile,length)
                     
                 if other_side + '_ACA' in subfile:
-                    points_other_ACA = geom.get_spline_points(subfile, step)
+                    points_other_ACA = geom.space_array(subfile,length)
                 if 'Acom_posterior' in subfile:
-                    points_Acom_post=geom.get_spline_points(subfile,step)
+                    points_Acom_post=geom.space_array(subfile,length)
                 
         if 'L_ACA' in files:
             if len(files)==9:
                 division_case='regular'
                 for subfiles in onlyfiles:
                     if "Acom" in subfiles:
-                        points_Acom = geom.get_spline_points(subfiles, step)
+                        points_Acom = geom.space_array(subfiles,length)
                     if "L_ACA" in subfiles:
-                        points_LACA = geom.get_spline_points(subfiles, step)
+                        points_LACA = geom.space_array(subfiles,length)
                     if "R_ACA" in subfiles:
-                        points_RACA = geom.get_spline_points(subfiles, step)
+                        points_RACA = geom.space_array(subfiles,length)
     
     for files in onlyfiles:
         if 'L_ICA_MCA' in files:
-            points_LICA_MCA=geom.get_spline_points(files,step)
+            points_LICA_MCA=geom.space_array(files,length)
         if 'R_ICA_MCA' in files:
-            points_RICA_MCA=geom.get_spline_points(files,step)
+            points_RICA_MCA=geom.space_array(files,length)
         
     print(division_case)
 
@@ -374,135 +370,135 @@ def division_ACA(pinfo, case, step):
 
 
 
-def division_A(pinfo, case, step):
-    """
+# def division_A(pinfo, case, length):
+#     """
 
 
-    Parameters
-    ----------
-    pinfo : str, example : 'pt2' , 'vsp7'
-    case : str, 'baseline' or 'vasospasm'
+#     Parameters
+#     ----------
+#     pinfo : str, example : 'pt2' , 'vsp7'
+#     case : str, 'baseline' or 'vasospasm'
 
-    Returns
-    -------
-    dpoints_divided : dict of the control points for every vessel
+#     Returns
+#     -------
+#     dpoints_divided : dict of the control points for every vessel
 
-    """
+#     """
 
-    dpoints_divided = {}
+#     dpoints_divided = {}
 
-    # pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
+#     # pathpath = "C:/Users/Francois/Desktop/Stage_UW/" + pinfo + "/path"
 
-    if pinfo == "pt2":
-        folder = "_segmentation_no_vti"
-    else:
-        folder = "_segmentation"
-    pathpath = (
-        "N:/vasospasm/"
-        + pinfo
-        + "/"
-        + case
-        + "/1-geometry/"
-        + pinfo
-        + "_"
-        + case
-        + folder
-        + "/paths"
-    )
+#     if pinfo == "pt2":
+#         folder = "_segmentation_no_vti"
+#     else:
+#         folder = "_segmentation"
+#     pathpath = (
+#         "N:/vasospasm/"
+#         + pinfo
+#         + "/"
+#         + case
+#         + "/1-geometry/"
+#         + pinfo
+#         + "_"
+#         + case
+#         + folder
+#         + "/paths"
+#     )
 
-    os.chdir(pathpath)
-    onlyfiles = []
-    for file in glob.glob("*.pth"):
-        onlyfiles.append(file)
-    for files in onlyfiles:
-        if "Acom" in files:
-            points_Acom = get_spline_points(files, step)
-        if "L_ACA" in files:
-            points_LACA = get_spline_points(files, step)
-        if "R_ACA" in files:
-            points_RACA = get_spline_points(files, step)
+#     os.chdir(pathpath)
+#     onlyfiles = []
+#     for file in glob.glob("*.pth"):
+#         onlyfiles.append(file)
+#     for files in onlyfiles:
+#         if "Acom" in files:
+#             points_Acom = geom.space_array(files,length)
+#         if "L_ACA" in files:
+#             points_LACA = geom.space_array(files,length)
+#         if "R_ACA" in files:
+#             points_RACA = geom.space_array(files,length)
 
-    # Assuming that Acom is well oriented from left to right
+#     # Assuming that Acom is well oriented from left to right
 
-    target = [points_Acom[0], points_Acom[points_Acom.shape[0] - 1]]
+#     target = [points_Acom[0], points_Acom[points_Acom.shape[0] - 1]]
 
-    Lnorms_start = []
-    Lnorms_end = []
-    for i in range(points_LACA.shape[0]):
-        lnorm_start = np.linalg.norm(target[0] - points_LACA[i])
-        lnorm_end = np.linalg.norm(target[1] - points_LACA[i])
+#     Lnorms_start = []
+#     Lnorms_end = []
+#     for i in range(points_LACA.shape[0]):
+#         lnorm_start = np.linalg.norm(target[0] - points_LACA[i])
+#         lnorm_end = np.linalg.norm(target[1] - points_LACA[i])
 
-        Lnorms_start.append(lnorm_start)
-        Lnorms_end.append(lnorm_end)
-    Lnorms_tot = Lnorms_end + Lnorms_start
+#         Lnorms_start.append(lnorm_start)
+#         Lnorms_end.append(lnorm_end)
+#     Lnorms_tot = Lnorms_end + Lnorms_start
 
-    lmini = np.min(Lnorms_tot)
-    limin = Lnorms_tot.index(lmini)
-    if limin > len(Lnorms_end):
-        limin -= len(Lnorms_end)
+#     lmini = np.min(Lnorms_tot)
+#     limin = Lnorms_tot.index(lmini)
+#     if limin > len(Lnorms_end):
+#         limin -= len(Lnorms_end)
 
-    points_LA1 = points_LACA[:limin]
-    points_LA2 = points_LACA[limin:]
+#     points_LA1 = points_LACA[:limin]
+#     points_LA2 = points_LACA[limin:]
 
-    Rnorms_start = []
-    Rnorms_end = []
-    for i in range(points_RACA.shape[0]):
-        lnorm_start = np.linalg.norm(target[0] - points_RACA[i])
-        lnorm_end = np.linalg.norm(target[1] - points_RACA[i])
+#     Rnorms_start = []
+#     Rnorms_end = []
+#     for i in range(points_RACA.shape[0]):
+#         lnorm_start = np.linalg.norm(target[0] - points_RACA[i])
+#         lnorm_end = np.linalg.norm(target[1] - points_RACA[i])
 
-        Rnorms_start.append(lnorm_start)
-        Rnorms_end.append(lnorm_end)
-    Rnorms_tot = Lnorms_end + Lnorms_start
+#         Rnorms_start.append(lnorm_start)
+#         Rnorms_end.append(lnorm_end)
+#     Rnorms_tot = Lnorms_end + Lnorms_start
 
-    rmini = np.min(Rnorms_tot)
-    rimin = Rnorms_tot.index(rmini)
-    if rimin > len(Rnorms_end):
-        rimin -= len(Rnorms_end)
+#     rmini = np.min(Rnorms_tot)
+#     rimin = Rnorms_tot.index(rmini)
+#     if rimin > len(Rnorms_end):
+#         rimin -= len(Rnorms_end)
 
-    points_RA1 = points_RACA[:limin]
-    points_RA2 = points_RACA[limin:]
+#     points_RA1 = points_RACA[:limin]
+#     points_RA2 = points_RACA[limin:]
 
-    fig = plt.figure(figsize=(7, 7))
-    ax = fig.add_subplot(111, projection="3d")
-    ax.grid()
+#     fig = plt.figure(figsize=(7, 7))
+#     ax = fig.add_subplot(111, projection="3d")
+#     ax.grid()
 
-    ax.scatter(points_Acom[:, 0], points_Acom[:, 1], points_Acom[:, 2], label="Acom")
-    ax.scatter(
-        points_RA1[:, 0], points_RA1[:, 1], points_RA1[:, 2], label="RIGHT ACA A1"
-    )
-    ax.scatter(
-        points_RA2[:, 0], points_RA2[:, 1], points_RA2[:, 2], label="RIGHT ACA A2"
-    )
-    ax.scatter(
-        points_LA1[:, 0], points_LA1[:, 1], points_LA1[:, 2], label="LEFT ACA A1"
-    )
-    ax.scatter(
-        points_LA2[:, 0], points_LA2[:, 1], points_LA2[:, 2], label="LEFT ACA A2"
-    )
+#     ax.scatter(points_Acom[:, 0], points_Acom[:, 1], points_Acom[:, 2], label="Acom")
+#     ax.scatter(
+#         points_RA1[:, 0], points_RA1[:, 1], points_RA1[:, 2], label="RIGHT ACA A1"
+#     )
+#     ax.scatter(
+#         points_RA2[:, 0], points_RA2[:, 1], points_RA2[:, 2], label="RIGHT ACA A2"
+#     )
+#     ax.scatter(
+#         points_LA1[:, 0], points_LA1[:, 1], points_LA1[:, 2], label="LEFT ACA A1"
+#     )
+#     ax.scatter(
+#         points_LA2[:, 0], points_LA2[:, 1], points_LA2[:, 2], label="LEFT ACA A2"
+#     )
 
-    ax.view_init(30, 90)
-    ax.legend()
-    plt.show()
+#     ax.view_init(30, 90)
+#     ax.legend()
+#     plt.show()
 
-    dpoints_divided = {}
-    k = 0
-    if points_LA1.shape[0] != 0:
-        dpoints_divided["points{}".format(k)] = "L_A1", points_LA1
-        k += 1
-    if points_LA2.shape[0] != 0:
-        dpoints_divided["points{}".format(k)] = "L_A2", points_LA2
-        k += 1
-    if points_RA1.shape[0] != 0:
-        dpoints_divided["points{}".format(k)] = "R_A1", points_RA1
-        k += 1
-    if points_RA2.shape[0] != 0:
-        dpoints_divided["points{}".format(k)] = "R_A2", points_RA2
-        k += 1
+#     dpoints_divided = {}
+#     k = 0
+#     if points_LA1.shape[0] != 0:
+#         dpoints_divided["points{}".format(k)] = "L_A1", points_LA1
+#         k += 1
+#     if points_LA2.shape[0] != 0:
+#         dpoints_divided["points{}".format(k)] = "L_A2", points_LA2
+#         k += 1
+#     if points_RA1.shape[0] != 0:
+#         dpoints_divided["points{}".format(k)] = "R_A1", points_RA1
+#         k += 1
+#     if points_RA2.shape[0] != 0:
+#         dpoints_divided["points{}".format(k)] = "R_A2", points_RA2
+#         k += 1
 
-    return dpoints_divided
+#     return dpoints_divided
 
 
-def division_P_bas(pinfo, case, step):
+def division_P_bas(pinfo, case, length):
     """
 
 
@@ -583,18 +579,18 @@ def division_P_bas(pinfo, case, step):
 
         if "BAS_PCA" in files:
             print('yes')
-            points_bas_pca = geom.get_spline_points(files, step)
+            points_bas_pca = geom.space_array(files,length)
             side_bas = files[0]
 
             for subfile in onlyfiles:
 
                 if side_bas == "L":
                     if "R_PCA" in subfile:
-                        points_target = geom.get_spline_points(subfile, step)
+                        points_target = geom.space_array(subfile,length)
 
                 else:
                     if "L_PCA" in subfile:
-                        points_target = geom.get_spline_points(subfile, step)
+                        points_target = geom.space_array(subfile,length)
 
             
             points_bas,points_pca,case_center = geom.bifurcation(points_bas_pca, points_target)
@@ -608,7 +604,7 @@ def division_P_bas(pinfo, case, step):
             for subfile in onlyfiles:
                 if "_Pcom" in subfile:
                     side_pcom = subfile[0]
-                    points_Pcom = geom.get_spline_points(subfile, step)
+                    points_Pcom = geom.space_array(subfile,length)
                     
             print(side_pcom,side_bas)
 
@@ -988,19 +984,19 @@ def createfinal_dicts(dpoint_i, indices):
 # %% Main
 
 
-def _main_(pinfo, case, step):
+def _main_(pinfo, case, length):
     """
     This code initialize the dictionnary of the control points, taking into account the variation
     of the circle of Wilis of the patient.
     """
 
-    dpoint_i = geom.create_dpoint(pinfo, case, step)
+    dpoint_i = geom.create_dpoint(pinfo, case, length)
 
     # Step 2# Create the separated arteries
 
-    dpoints_divI = division_ICA(pinfo, case, step)
-    dpoints_divACA = division_ACA(pinfo, case, step)
-    dpoints_divPCA = division_P_bas(pinfo, case, step)
+    dpoints_divI = division_ICA(pinfo, case, length)
+    dpoints_divACA = division_ACA(pinfo, case, length)
+    dpoints_divPCA = division_P_bas(pinfo, case, length)
 
     dpoints = dpoint_i.copy()
 

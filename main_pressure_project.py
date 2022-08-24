@@ -37,19 +37,22 @@ import skg
 from skg import nsphere
 import pickle
 from tqdm import tqdm
+import pandas as pd
 
 
-# %% Scripts as modules
+#%% import other scripts
+
 
 os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
 
 import geometry_slice as geom
+import get_cross_section as cross_section
 
-# %% Functions
+
+#%% Functions
 
 
 def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case,num_cycle):
-    # Change name function?
     """
 
 
@@ -66,7 +69,7 @@ def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case,
     ddist = {}
     dvectors = {}
     onlydat, indices_dat,pathwd = get_list_files_dat(pinfo, case, num_cycle)
-    # print(indices_dat[i_dat])
+ 
     # Inverse the order of the points if the pressure is not decreasing
 
     if (
@@ -106,58 +109,24 @@ def get_distance_along(i_vessel, i_dat, dpressure, dvectors, dpoints,pinfo,case,
 
 
 def get_distance(vectors):
+    """
+    
+
+    Parameters
+    ----------
+    vectors :numpy array, set of normal vectors
+
+    Returns
+    -------
+    dist : list of distances along the set of vectors.
+
+    """
     norms = geom.calculate_norms(vectors)
     dist = np.zeros((norms.shape[0] + 1, 1))
     for j in range(1, norms.shape[0] + 1):
         dist[j] = norms[:j, :].sum()
 
     return dist
-
-
-# def get_list_files_dat(pinfo, case, num_cycle):
-#     """
-
-
-#     Parameters
-#     ----------
-#     pinfo : str, patient information, composed of pt/vsp + number.
-#     num_cycle : int, number of the cycle computed
-#     case : str, baseline or vasospasm
-
-#     Returns
-#     -------
-#     onlyfiles : list of .dat files for the current patient, for the case and cycle wanted.
-#     """
-
-#     num_cycle = str(num_cycle)
-
-#     path = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
-#     os.chdir(path)
-#     onlyfiles = []
-
-#     for file in glob.glob("*.dat"):
-#         if pinfo + "_" + case + "_cycle" + num_cycle in file:
-#             onlyfiles.append(file)
-#     indices = [l[13:-4] for l in onlyfiles]
-
-#     for i in range(len(indices)):
-#         newpath = (
-#             "N:/vasospasm/pressure_pytec_scripts/plots_8_4/"
-#             + pinfo
-#             + "/"
-#             + case
-#             + "/cycle_"
-#             + num_cycle
-#             + "/plot_"
-#             + indices[i]
-#         )
-#         if not os.path.exists(newpath):
-#             os.makedirs(newpath)
-
-#     return onlyfiles, indices
-
-
-
 
 
 
@@ -179,12 +148,12 @@ def get_list_files_dat(pinfo, case, num_cycle):
     num_cycle = str(num_cycle)
 
     pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
-    mesh_size = "5"
-    os.chdir(pathwd)
-    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
-    for files_dir in list_files_dir:
-        if "mesh_size_" + mesh_size in files_dir:
-            pathwd = pathwd + "/" + files_dir
+    # mesh_size = "5"
+    # os.chdir(pathwd)
+    # list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    # for files_dir in list_files_dir:
+    #     if "mesh_size_" + mesh_size in files_dir:
+    #         pathwd = pathwd + "/" + files_dir
     os.chdir(pathwd)
     onlyfiles = []
     for file in glob.glob("*.dat"):
@@ -207,22 +176,6 @@ def get_list_files_dat(pinfo, case, num_cycle):
             os.makedirs(newpath)
 
     return onlyfiles, indices,pathwd
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def save_dict(dico, name):
@@ -263,6 +216,19 @@ def load_dict(name):
 
 
 def get_variation(pinfo, case):
+    """
+    
+
+    Parameters
+    ----------
+    pinfo : str, ex : 'pt7'
+    case : str, ex : 'baseline'
+
+    Returns
+    -------
+    variation : int, or str, which is a key to know which "division_variation" script to use for a patient
+
+    """
 
     dinfo = scipy.io.loadmat(
         "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/case_info.mat"
@@ -280,103 +246,101 @@ def get_variation(pinfo, case):
     return variation
 
 
-
-
 # %% Functions Tecplot
 
-def plot_cross_section(pinfo,name,ax):
+# def plot_cross_section(pinfo,name,ax):
     
-    dradius_vas={}
-    dradius_bas={}
+#     dradius_vas={}
+#     dradius_bas={}
     
-    folder = "_segmentation"
-    pathpath = (
-        "N:/vasospasm/"
-        + pinfo
-        + "/"
-        + "baseline"
-        + "/1-geometry/"
-        + pinfo
-        + "_"
-        + "baseline"
-        + folder
-        + "/Segmentations"
-    )
+#     folder = "_segmentation"
+#     pathpath = (
+#         "N:/vasospasm/"
+#         + pinfo
+#         + "/"
+#         + "baseline"
+#         + "/1-geometry/"
+#         + pinfo
+#         + "_"
+#         + "baseline"
+#         + folder
+#         + "/Segmentations"
+#     )
 
-    os.chdir(pathpath)
-    onlyfiles = []
-    for file in glob.glob("*.ctgr"):
-        onlyfiles.append(file)
-    for file in onlyfiles:
-        if name in file:
-            dradius_bas['{}'.format(name)]=geom.get_center_radius(file, pinfo, 'baseline')
+#     os.chdir(pathpath)
+#     onlyfiles = []
+#     for file in glob.glob("*.ctgr"):
+#         onlyfiles.append(file)
+#     for file in onlyfiles:
+#         if name in file:
+#             dradius_bas['{}'.format(name)]=geom.get_center_radius(file, pinfo, 'baseline')
         
-    folder = "_segmentation"
-    pathpath = (
-        "N:/vasospasm/"
-        + pinfo
-        + "/"
-        + "vasospasm"
-        + "/1-geometry/"
-        + pinfo
-        + "_"
-        + "vasospasm"
-        + folder
-        + "/Segmentations"
-    )
+#     folder = "_segmentation"
+#     pathpath = (
+#         "N:/vasospasm/"
+#         + pinfo
+#         + "/"
+#         + "vasospasm"
+#         + "/1-geometry/"
+#         + pinfo
+#         + "_"
+#         + "vasospasm"
+#         + folder
+#         + "/Segmentations"
+#     )
 
-    os.chdir(pathpath)
-    onlyfiles = []
-    for file in glob.glob("*.ctgr"):
-        onlyfiles.append(file)
-    for file in onlyfiles:
-        if name in file:
-            dradius_vas['{}'.format(name)]=geom.get_center_radius(file, pinfo, 'vasospasm')
+#     os.chdir(pathpath)
+#     onlyfiles = []
+#     for file in glob.glob("*.ctgr"):
+#         onlyfiles.append(file)
+#     for file in onlyfiles:
+#         if name in file:
+#             dradius_vas['{}'.format(name)]=geom.get_center_radius(file, pinfo, 'vasospasm')
         
         
     
-    dict_interb=dradius_bas.get(name)
-    Array_control_points_bas=np.zeros((len(dict_interb),3))
-    Array_radius_bas=np.zeros((len(dict_interb),1))
+#     dict_interb=dradius_bas.get(name)
+#     Array_control_points_bas=np.zeros((len(dict_interb),3))
+#     Array_radius_bas=np.zeros((len(dict_interb),1))
 
-    for i in range(1,len(dict_interb)+1):
-        points,radius=dict_interb.get('center{}'.format(i))
-        Array_control_points_bas[i-1,:]=points
-        Array_radius_bas[i-1]=radius
-    # print('bas : ',Array_radius_bas.shape)
+#     for i in range(1,len(dict_interb)+1):
+#         points,radius=dict_interb.get('center{}'.format(i))
+#         Array_control_points_bas[i-1,:]=points
+#         Array_radius_bas[i-1]=radius
+#     # print('bas : ',Array_radius_bas.shape)
     
-    dict_interv=dradius_vas.get(name)
-    Array_control_points_vas=np.zeros((len(dict_interv),3))
-    Array_radius_vas=np.zeros((len(dict_interv),1))
+#     dict_interv=dradius_vas.get(name)
+#     Array_control_points_vas=np.zeros((len(dict_interv),3))
+#     Array_radius_vas=np.zeros((len(dict_interv),1))
 
-    for i in range(1,len(dict_interv)+1):
-        points,radius=dict_interv.get('center{}'.format(i))
-        Array_control_points_vas[i-1,:]=points
-        Array_radius_vas[i-1]=radius
-    # print('vas : ',Array_radius_vas.shape)
+#     for i in range(1,len(dict_interv)+1):
+#         points,radius=dict_interv.get('center{}'.format(i))
+#         Array_control_points_vas[i-1,:]=points
+#         Array_radius_vas[i-1]=radius
+#     # print('vas : ',Array_radius_vas.shape)
         
-    vect_bas=geom.calculate_normal_vectors(Array_control_points_bas)
-    vect_vas=geom.calculate_normal_vectors(Array_control_points_vas)
+#     vect_bas=geom.calculate_normal_vectors(Array_control_points_bas)
+#     vect_vas=geom.calculate_normal_vectors(Array_control_points_vas)
     
-    Norms_bas= geom.calculate_norms(vect_bas)
-    Norms_vas =  geom.calculate_norms(vect_vas)
-    Norms_bas_f=np.zeros((Norms_bas.shape[0]+1,1))
-    Norms_vas_f=np.zeros((Norms_vas.shape[0]+1,1))
+#     Norms_bas= geom.calculate_norms(vect_bas)
+#     Norms_vas =  geom.calculate_norms(vect_vas)
+#     Norms_bas_f=np.zeros((Norms_bas.shape[0]+1,1))
+#     Norms_vas_f=np.zeros((Norms_vas.shape[0]+1,1))
     
    
-    Norms_bas_list=[float(sum(Norms_bas[:i])) for i in range(Norms_bas.shape[0])]
-    Norms_vas_list=[float(sum(Norms_vas[:i])) for i in range(Norms_vas.shape[0])]
+#     Norms_bas_list=[float(sum(Norms_bas[:i])) for i in range(Norms_bas.shape[0])]
+#     Norms_vas_list=[float(sum(Norms_vas[:i])) for i in range(Norms_vas.shape[0])]
 
     
-    # Xb=np.linspace(0,len(dict_interb),len(dict_interb))
-    # Xv=np.linspace(0,len(dict_interv),len(dict_interv))
+#     # Xb=np.linspace(0,len(dict_interb),len(dict_interb))
+#     # Xv=np.linspace(0,len(dict_interv),len(dict_interv))
 
-    ax.plot(Norms_bas_list,Array_radius_bas[:-1], label= 'radius | baseline ')
-    ax.plot(Norms_vas_list,Array_radius_vas[:-1], label = 'radius | vasospasm')
+#     ax.plot(Norms_bas_list,Array_radius_bas[:-1], label= 'radius | baseline ')
+#     ax.plot(Norms_vas_list,Array_radius_vas[:-1], label = 'radius | vasospasm')
    
     
    
-    return fig
+#     return fig
 
 
 
@@ -416,6 +380,8 @@ def find_closest(data_file,pinfo,case, origin, name):
 
     Parameters
     ----------
+    data_file : tecplot data_file
+    pinfo,case : str of the patient info
     origin :coordinates of the control point on which one want to work
 
     Returns
@@ -479,12 +445,19 @@ def get_pressure(data_file,origin, normal, name,pinfo,case):
 
     Parameters
     ----------
+    data_file: current tecplot data_file
     origin : (3,1) array of the origin coordinates of the slice.
     vectors : (3,1) array of the normal vector coordinate
+    name : str of the name of the vessel
+    pinfo : str (ex : 'pt7')
+    case : str (ex : 'baseline')
 
     Returns
     -------
-    prssure : average pressure value in the slice
+    min_pressure : list, minimum pressure value in the slice
+    avg_pressure :list, averaage pressure value in the slice
+    max_pressure : list, maximum pressure value in the slice
+
     """
 
     frame = tp.active_frame()
@@ -521,11 +494,16 @@ def compute_along(data_file,i_vessel, dpoints, dvectors,pinfo,case):
 
     Parameters
     ----------
+    data_file : tecplot datafile
     i_vessel :index of the vessel.
+    dpoints: dictionary of the control points
+    dvectors : dictionary of the normal vectors
+    pinfo : str, ex : 'pt2'
+    case : str, ex : 'baseline'
 
     Returns
     -------
-    Lpressure : list of the average pressure along the vessel.
+    Lpressure : numpy array of the min/avg and max pressure along the vessel.
 
     """
 
@@ -582,6 +560,9 @@ def plot_linear(i_vessel, Lpress, dpoints_u, dvectors_u, dist):
     ----------
     i_vessel : index of the vessel.
     Lpress : array of the pressures along the vessel.
+    dpoints_u : dictionary of the control points
+    dvectors_u : dictionary of the normal vectors
+    dist : numpy array of the distance along the vessel 
 
     Returns
     -------
@@ -633,7 +614,12 @@ def save_pressure(data_file,i, dpoints, dvectors,pinfo,case):
 
     Parameters
     ----------
+    data_file : tecplot datafile
     i : vessel index.
+    dpoints : dictionary of the control points
+    dvectors : dictionary of the normal vectors
+    pinfo : str, ex : 'pt2'
+    case: str, ex: 'baseline'
 
     Returns
     -------
@@ -670,48 +656,25 @@ def save_pressure_all(data_file,dpoints, dvectors,pinfo,case):
     return dpressure
 
 
-# def plot_on_time(dpressure, i_vessel, pinfo):
-
-#     onlydat, indices = get_list_files_dat(pinfo, case, num_cycle)
-#     len_vessel = (
-#         dpressure.get("{}".format(indices[0]))
-#         .get("pressure{}".format(i_vessel))[1]
-#         .shape[0]
-#     )
-#     name_vessel = dpressure.get("{}".format(indices[0])).get(
-#         "pressure{}".format(i_vessel)
-#     )[0]
-#     tabY = np.zeros((len_vessel))
-#     X = np.linspace(1, len(onlydat) - 1, len(onlydat) - 1)
-
-#     for i in range(len_vessel):
-
-#         Y = [
-#             dpressure.get("{}".format(indices[j])).get("pressure{}".format(i_vessel))[
-#                 1
-#             ][i, 1]
-#             for j in range(len(onlydat) - 1)
-#         ]
-#         # modify by taking the second line (avg)
-#         plt.plot(X, Y)
-#     plt.grid()
-
-#     plt.xlabel("Time step")
-#     plt.ylabel("Pressure")
-#     plt.title("Pressure in each point in function of time in the " + name_vessel)
-#     plt.savefig(
-#         "N:/vasospasm/pressure_pytec_scripts/plots_time/"
-#         + pinfo
-#         + "_"
-#         + case
-#         + "_"
-#         + name_vessel
-#         + ".png"
-#     )
-#     plt.show()
-
-
 def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
+    """
+    
+
+    Parameters
+    ----------
+    dpressure : dictionary of the pressure along all the vessels, during all timesteps
+    ddist : dictionary of the distance along all the vessels
+    i_vessel : index of the vessel
+    pinfo : str, patient information : ex : 'pt2'
+    case : str, ex : 'baseline'
+    num_cycle : int, number of the cycle, usually 2
+    ax : matplotlib ax object
+
+    Returns
+    -------
+    ax : matplotlib ax object
+
+    """
 
     Ldist = []
 
@@ -726,25 +689,7 @@ def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
         "pressure{}".format(i_vessel)
     )[0]
     
-    # variation = get_variation(pinfo, case)
-
-    # os.chdir("N:/vasospasm/pressure_pytec_scripts/Scripts")
-    # module_name = "division_variation" + str(variation)
-    # module = importlib.import_module(module_name)
-
-    # importlib.reload(module)
-    # importlib.reload(geom)
-    # dpoints_u, dvectors_u = module._main_(pinfo, case, step)
-
-   
-    
-    # ddist = {}
-    
-    # ddist = get_distance_along(
-    #         i_vessel, 0, dpressure, dvectors_u, dpoints_u,pinfo,case
-    #     )
-    
-
+  
     dist = ddist.get("dist{}".format(i_vessel))[1]
     for i in range(0, dist.shape[0] - 1):
         Ldist.append(float((dist[i] + dist[i + 1]) / 2))
@@ -781,7 +726,6 @@ def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
        tab_pressure_offset[i,2] = tab_pressure[i,2] - tab_pressure[0,1]
 
 
-    # fig = plt.figure(figsize=(14.4, 10.8))
 
     ax.plot(Ldist, tab_pressure_offset[:, 1], "-", label="Average pressure over time")
     ax.fill_between(
@@ -791,29 +735,27 @@ def plot_time_dispersion(dpressure,ddist, i_vessel, pinfo,case,num_cycle,ax):
         alpha=0.2
     )
 
-    # plt.grid()
-    # plt.xlabel("distance along the vessel (m)", fontsize=18)
-    # plt.ylabel("Pressure", fontsize=18)
-    # plt.title(
-    #     "Pressure along the " + ddist.get("dist{}".format(i_vessel))[0], fontsize=20
-    # )
-    # plt.legend(loc="best")
-
-    # plt.savefig(
-    #     "N:/vasospasm/pressure_pytec_scripts/plots_resistance/"
-    #     + pinfo
-    #     + "_"
-    #     + case
-    #     + "_"
-    #     + name_vessel
-    #     + ".png"
-    # )
-    # plt.show()
+ 
     plt.grid()
     return ax
 
 
 def invert_array(arr):
+    """
+    invert the order of a numpy array if its first value is inferior to its last
+
+    Parameters
+    ----------
+    arr :numpy array 
+
+    Returns
+    -------
+    int
+        1 if the array has been inverted, 0 if not
+    arr : numpy array , inverted or not
+        
+
+    """
     new_arr = np.ones_like(arr)
     if arr[1, 0] < arr[1, arr.shape[1] - 1]:
         for i in range(3):
@@ -1063,7 +1005,7 @@ def plot_R(dpressure,ddist,dpoints, i_vessel, pinfo, case,num_cycle, ax,ax2):
 # %% Main
 
 
-def main():
+def main(pinfo,case,length,num_cycle,select_file,select_vessel):
     """
 
     The object of this script is to compute and plot the pressure along the vessels
@@ -1086,7 +1028,11 @@ def main():
                     At each bifurcation that occur in the first step, a half radius of the intersecting vessel is remove at each side of the other vessel
                     in the bifurcation. This is to prevent error during the slicing process.
 
-        --> Step 3 : Compute the dictionary of the normal vectors from the new control points
+        --> Step 3 : Clean the slices.
+                    The tecplot case file is loaded with the data of the first timestep as a test. The slices are extracted respectfully to the dict
+                    of points and vectors. But here, all the x,y,z coordinates of the slice are extracted, and the slice is described through geometric/morphologic 
+                    descriptors such as convexity and circularity. If the values are not satisfying, the slice is removed. The step 3 returns a new set
+                    of points and vectors of only the clean data.
 
         --> Step 5 : Compute pressure with tecplot
 
@@ -1104,50 +1050,49 @@ def main():
 
     """
     
-    # Still a few global variables. 
 
-    # global pinfo
-    # global case
-    # global num_cycle
-    #global step
-    #global select_file
-    #global filename
-    #global data_file
-    
+    Infos = {'patient informations': [pinfo],'cycle': [num_cycle],'length':[length]}
+    context = pd.DataFrame(data = Infos)
+    context.to_csv('N:/vasospasm/' + pinfo + '/' + case + '/4-results/pressure_resistance/infos.csv')
     ######################################### Choosing the patient informations
   
-    print("$ Patient informations $\n")
-    ptype = input("Patient origin? -- v : vsp## or p: pt## --\n")
-    if ptype == "v":
-        ptype = "vsp"
-    elif ptype == "p":
-        ptype = "pt"
-    pnumber = input("Patient number?\n")
-    pinfo = ptype + pnumber
-    case = input("Case ? -- b for baseline of v for vasospasm\n")
-    if case == "b":
-        case = "baseline"
-    elif case == "v":
-        case = "vasospasm"
+    # print("$ Patient informations $\n")
+    # ptype = input("Patient origin? -- v : vsp## or p: pt## --\n")
+    # if ptype == "v":
+    #     ptype = "vsp"
+    # elif ptype == "p":
+    #     ptype = "pt"
+    # pnumber = input("Patient number?\n")
+    # pinfo = ptype + pnumber
+    # case = input("Case ? -- b for baseline of v for vasospasm\n")
+    # if case == "b":
+    #     case = "baseline"
+    # elif case == "v":
+    #     case = "vasospasm"
 
-    print("$ Select computing cases\n")
-    num_cycle = int(input("Which cycle ? 1,2,3 or 4\n"))
+    # print("$ Select computing cases\n")
+    # num_cycle = int(input("Which cycle ? 1,2,3 or 4\n"))
 
     onlydat, indices_dat,pathwd = get_list_files_dat(pinfo, case, num_cycle) # Get the dat files for the patient and its case
 
-    for k in range(len(onlydat)):
-        print(k, ": " + indices_dat[k][9:-3] + ":" + indices_dat[k][11:] + " s")
-    print("a : one period (30 time steps) \n")
-    select_file = input("which time step?\n")
+    # for k in range(len(onlydat)):
+    #     print(k, ": " + indices_dat[k][9:-3] + ":" + indices_dat[k][11:] + " s")
+    # print("a : one period (30 time steps) \n")
+    # select_file = input("which time step?\n")
 
-    print("Which length between to points (in every artery) ? ")
-    print('\n')
-    step_in = input('-->')
-    step=float(step_in)
+    # print("Which length between to points (in every artery) ? ")
+    # print('\n')
+    # step_in = input('-->')
+    # step=float(step_in)
 
     # Load a different module of the control points extraction and sorting depending on the patient variation
     
     ############################################################# STEP 1, 2 & 3
+    
+    print(
+     " ############  Step 1 : Division of the vessels at the bifurcations  ############",
+     "\n",
+ )
     
     variation = get_variation(pinfo, case) # Get the variation from the case_info.mat
 
@@ -1157,13 +1102,23 @@ def main():
 
     importlib.reload(module)
     importlib.reload(geom)
-    dpoints_u, dvectors_u = module._main_(pinfo, case, step) # Extract the control points, well organized and divided
+    dpoints_d, dvectors_d = module._main_(pinfo, case, length) # Extract the control points, well organized and divided
+
+    # FROM THESE CONTROL POITNS AND VECTORS, FIRST LOADING INTO TECPLOT TO CLEAN THE DATA (REMOVE THE IRREGULAR SLICES)
+
+    print(
+     " ############  Step 2 : First connection to tecplot :  Slice cleaning  ############",
+     "\n",
+ )
+
+    dCS, L_ind = cross_section.get_dCS(pinfo, case, num_cycle, dpoints_d, dvectors_d)
+    n_dcs,dpoints_u,dvectors_u = cross_section.morphometric_cleaning(dCS, L_ind, dpoints_d, dvectors_d)
 
 
-    for k in range(len(dpoints_u)):
-        print(k, " : " + dpoints_u.get("points{}".format(k))[0])
-    print("a : all vessels\n")
-    select_vessel = input("Compute on which vessel ?\n")
+    # for k in range(len(dpoints_u)):
+    #     print(k, " : " + dpoints_u.get("points{}".format(k))[0])
+    # print("a : all vessels\n")
+    # select_vessel = input("Compute on which vessel ?\n")
 
 
     dpressure = {}
@@ -1186,7 +1141,7 @@ def main():
         filename = onlydat[i]
 
         print(
-            " ############  Step 2 : Connection to Tecplot  ############ Time step : ",
+            " ############  Step 3 : Connection to Tecplot  ############ Time step : ",
             i,
             "\n",
         )
@@ -1199,30 +1154,8 @@ def main():
         tp.new_layout()
         frame = tp.active_frame()
 
-        # dir_file = (
-        #     "N:/vasospasm/"
-        #     + pinfo
-        #     + "/"
-        #     + case
-        #     + "/3-computational/hyak_submit/"
-        #     + filename
-        # )
         dir_file = pathwd + '/' + filename
 
-        # data_file = tp.data.load_fluent(
-        #     case_filenames=[
-        #         "N:/vasospasm/"
-        #         + pinfo
-        #         + "/"
-        #         + case
-        #         + "/3-computational/hyak_submit/"
-        #         + pinfo
-        #         + "_"
-        #         + case
-        #         + ".cas"
-        #     ],
-        #     data_filenames=[dir_file],
-        # )
         data_file = tp.data.load_fluent(
             case_filenames=[
                 pathwd + '/' 
@@ -1257,7 +1190,7 @@ def main():
         slices = plot.slices(0)
         slices.show = True
 
-        print(" ############  Step 3 : Compute pressure  ############\n")
+        print(" ############  Step 4 : Compute pressure  ############\n")
 
         if select_vessel == "a":
             dpressure["{}".format(indices_dat[i])] = save_pressure_all(
@@ -1270,10 +1203,10 @@ def main():
             i_ = int(select_vessel)
             dpress = save_pressure(data_file,i_, dpoints_u, dvectors_u,pinfo,case)
             dpressure["{}".format(indices_dat[i])] = dpress
-            save_dict(
-                dpressure,
-                "N:/vasospasm/pressure_pytec_scripts/dpressure" + select_vessel,
-            )
+            # save_dict(
+            #     dpressure,
+            #     "N:/vasospasm/pressure_pytec_scripts/dpressure" + select_vessel,
+            # )
 
         if select_vessel == "a":
             ddist = {}
@@ -1286,10 +1219,12 @@ def main():
         else:
             i_vessel = int(select_vessel)
             ddist = get_distance_along(i_vessel, i, dpressure, dvectors_u, dpoints_u,pinfo,case,num_cycle)
-            save_dict(
-                ddist,
-                "N:/vasospasm/pressure_pytec_scripts/ddist_" + pinfo + "_" + case ,
-            )
+            # save_dict(
+            #     ddist,
+            #     "N:/vasospasm/pressure_pytec_scripts/ddist_" + pinfo + "_" + case ,
+            # )
+            
+            
 
         # if select_vessel == "a":
         #     for k in range(len(dpoints_u)):
@@ -1338,13 +1273,32 @@ def main():
         #     )
 
     #plot_R(dpressure,i_vessel,pinfo,case)
+    
+    # Save the data into the patient folder :
+    
+    pathused = 'N:/vasospasm/' + pinfo + '/' + case + '/4-results/pressure_resistance/'
+    
+    save_dict(ddist,pathused + "dist_" + pinfo + "_" + case)
+    save_dict(dpressure,pathused + 'pressure_' + pinfo + '_' + case)
+    save_dict(dpoints_u, pathused + 'points_' + pinfo + '_' + case)
+    save_dict(dvectors_u, pathused + 'vectors_' + pinfo + '_' + case)
+    save_dict(n_dcs, pathused +'cross_section_' + pinfo + '_' + case)
 
-    return dpressure,ddist
+    
+    return dpressure,ddist,n_dcs,dpoints_u,dvectors_u
 
-if __name__=="__main__":
-    dpoints_pt2_vas,ddist_pt2_vas = main()
+
+dpressure_pt7_bas,ddist_pt7_bas,CS_pt7_bas,dpoints_pt7_bas,dvectors_pt7_bas = main('pt7','baseline',0.009,2,"a","a")
+dpressure_pt7_vas,ddist_pt7_vas,CS_pt7_vas,dpoints_pt7_vas,dvectors_pt7_vas = main('pt7','vasospasm',0.009,2,"a","a")
     
 
+# The main compute and returns the dictionaries of 
+    # - pressure
+    # - distance along the vessel
+    # - Cross section
+    # - control points
+    # - normal vectors 
+# For all the vessels.
     
     
     

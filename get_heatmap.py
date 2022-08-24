@@ -4,6 +4,9 @@ Created on Tue Aug 16 12:20:18 2022
 
 @author: GALADRIEL_GUEST
 
+This script is plotting the heatmap of final results for one patient : 
+    - Pressure/ resistance and flowrate for baseline and vasospasm
+    - rate of these three variables between baseline and vasospasm
 
 """
 import os
@@ -16,7 +19,6 @@ import pickle
 import importlib
 import pandas as pd
 pd.options.display.float_format = '{:.2f}'.format
-
 
 
 import seaborn as sns
@@ -68,8 +70,6 @@ def load_dict(name):
     return b
 
 
-
-
 def get_list_files_dat(pinfo, case, num_cycle):
     """
 
@@ -88,12 +88,12 @@ def get_list_files_dat(pinfo, case, num_cycle):
     num_cycle = str(num_cycle)
 
     pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit/"
-    mesh_size = "5"
-    os.chdir(pathwd)
-    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
-    for files_dir in list_files_dir:
-        if "mesh_size_" + mesh_size in files_dir:
-            pathwd = pathwd + "/" + files_dir
+    # mesh_size = "5"
+    # os.chdir(pathwd)
+    # list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    # for files_dir in list_files_dir:
+    #     if "mesh_size_" + mesh_size in files_dir:
+    #         pathwd = pathwd + "/" + files_dir
     os.chdir(pathwd)
     onlyfiles = []
     for file in glob.glob("*.dat"):
@@ -351,9 +351,11 @@ def find_closest(Ldist_bas,dist_max):
     return dist_opti
 
 
-
-
 def get_ultimate_values(dpoints_bas,tab_pressure_bas,tab_pressure_vas,tab_resistance_bas,tab_resistance_vas,Ldist_bas,Ldist_vas,Q_bas,Q_vas,pinfo,ivessel):
+    
+    """
+    This function returns a dataframe of the ultimate values of presusre,resistance, and fl
+    """
     
     ulti_resist = tab_resistance_vas[-1,1]
     ulti_press = tab_pressure_vas[-1]
@@ -363,13 +365,13 @@ def get_ultimate_values(dpoints_bas,tab_pressure_bas,tab_pressure_vas,tab_resist
     ulti_resist_bas = tab_resistance_bas[dist_opti_bas,1]
     ulti_press_bas = tab_pressure_bas[dist_opti_bas]
     
-    percent_resist = abs(100*(ulti_resist - ulti_resist_bas)/ulti_resist_bas)
-    percent_press = abs(100*(ulti_press - ulti_press_bas)/ulti_press_bas)
+    percent_resist = 100*(ulti_resist - ulti_resist_bas)/ulti_resist_bas
+    percent_press = 100*(ulti_press - ulti_press_bas)/ulti_press_bas
     
     ulti_Q = Q_vas
     ulti_Q_bas = Q_bas
     
-    percent_Q = abs(100*(ulti_Q-ulti_Q_bas)/ulti_Q_bas)
+    percent_Q = 100*(ulti_Q-ulti_Q_bas)/ulti_Q_bas
     
     # data = {'Vasospasm pressure': ulti_press,
     #     'Baseline pressure': ulti_press_bas,
@@ -464,77 +466,5 @@ def plot_heatmap(pinfo,num_cycle,dpressure_bas,dpressure_vas,ddist_bas,ddist_vas
     plt.tight_layout()
     
 
-#%% 
 
-
-def get_dCS(pinfo,case,num_cycle,step,dpoints,dvectors,ddist):
-
-    
-    Lvessel=['L_MCA','R_MCA','L_A1','L_A2','R_A1','R_A2','L_P1','L_P2','R_P1','R_P2','BAS','L_ICA','R_ICA']
-
-    Lvessel_pth=[dpoints.get('points{}'.format(i))[0] for i in range(len(dpoints))]
-    Lvessel_comp=Lvessel_pth.copy()
-      
-    
-    Verity = np.zeros((len(Lvessel),len(Lvessel_comp)))
-    
-    for i in range(len(Lvessel)):
-        for j in range(len(Lvessel_comp)):
-            
-            Verity[i,j] = (Lvessel[i] in Lvessel_comp[j])
-    L_test = []
-    L_ind = []
-    for i in range(len(Lvessel)):
-        for j in range(len(Lvessel_comp)):
-            if Verity[i,j] == 1:
-                L_test.append(i)
-                L_ind.append(j)
-                
-    dCS = {}    
-    for k in range(len(L_ind)):
-        i = L_ind[k]
-        dCS['slice{}'.format(i)] = cross_section.compute_radius(pinfo,case,num_cycle,step, dpoints, dvectors, i)
-    
-    return dCS
-
-# def plot_CS(dCS,ddist,case):
-#     for k in range(len(L_ind)):
-#         i = L_ind[k]
-#         slice_to_plot = dCS.get('slice{}'.format(i))
-#         name,dist_forx = ddist.get('dist{}'.format(i))
-#         print('name vessel : ',name)
-#         print('nb slice  : ',len(slice_to_plot))
-#         print('nb dist : ',len(dist_forx))
-#         len_to_keep = len(slice_to_plot)-len(dist_forx)
-        
-#         print(len_to_keep)
-#         # adjust sizes
-#         if len_to_keep>0:
-#             slice_to_plot = slice_to_plot[:-len_to_keep]
-#         elif len_to_keep<0:
-#             dist_forx = dist_forx[:+len_to_keep]
-        
-#         # Clean (remove points to big)
-        
-#         print('\n')
-#         avg_value = np.mean(slice_to_plot)
-#         for l in range(len(slice_to_plot)):
-#             if slice_to_plot[l] > 3 * avg_value:
-#                 if l>= 1:
-#                     slice_to_plot[l] = slice_to_plot[l-1]
-#                 else : 
-#                     slice_to_plot[l] = slice_to_plot[3]
-#         print('name vessel : ',name)
-#         print('nb slice  : ',len(slice_to_plot))
-#         print('nb dist : ',len(dist_forx))
-        
-#         plt.plot(dist_forx,slice_to_plot)
-#         plt.show()
-        
-#     plt.show()
-    
-    
-    
-    
-    
     

@@ -3,6 +3,8 @@
 Created on Wed Jul 20 14:53:50 2022
 
 @author: GALADRIEL_GUEST
+
+This script is a place where the geometrical functions that are used in every scripts are grouped.
 """
 
 #%% Imports
@@ -34,7 +36,6 @@ import skg
 from skg import nsphere
 import pickle
 from tqdm import tqdm
-
 import random
 
 
@@ -77,6 +78,20 @@ def get_spline_points(fname, step):
 
 
 def find_next(points,i,length):
+    """
+    
+
+    Parameters
+    ----------
+    points : np array of 3d points
+    i : int, starting index
+    length : float, the length that is wanted between too points
+
+    Returns
+    -------
+    int : index of the next points spaced by a distance 'length' from points[i]
+
+    """
     k=i
     norm = 0
     x = points[i,:]
@@ -90,6 +105,20 @@ def find_next(points,i,length):
     return k-i
 
 def find_last(points,length):
+    """
+    
+
+    Parameters
+    ----------
+    points : numpy array, set of 3d points
+    length : distance wanted between the points
+
+    Returns
+    -------
+    TYPE
+        the index of the points that is at the distance 'length' of the last point in the set 
+
+    """
     i = points.shape[0]-1
     k=i
     norm = 0
@@ -107,6 +136,19 @@ def find_last(points,length):
 
 
 def space_array(fname,length):
+    """
+    
+
+    Parameters
+    ----------
+    fname : .pth file of control points
+    length :distance wanted between the points
+
+    Returns
+    -------
+    points_spaced :return a set of points equally spaced by the distance 'length'
+
+    """
     
     points_spline = get_spline_points(fname, 1)
     i=0
@@ -169,24 +211,6 @@ def calculate_norms(vectors):
         norms[i] = norm_i
     return norms
 
-
-# def find_number_of_steps(points_vessel, radius):
-
-#     # Convert the radius into the equivalent of steps in the vessel coordinates array
-
-#     vect_vessel = calculate_normal_vectors(points_vessel)
-#     norms_vessel = calculate_norms(vect_vessel)
-
-#     # Compute the norms from 0 to i, i variating between 0 and len(vessel)
-#     L_dist_along = [np.sum(norms_vessel[0:i]) for i in range(norms_vessel.shape[0])]
-#     # Compare the previous norms and the radius
-#     L_compare_r = [abs(L_dist_along[i] - radius) for i in range(len(L_dist_along))]
-#     # Select the index of the minimum distance, which correspond to the indice to remove.
-#     step_vessel = L_compare_r.index(min(L_compare_r))
-
-#     # return step_bas,step_lsc,step_rsc
-
-#     return step_vessel
 
 
 def create_dpoint(pinfo, case, length):
@@ -340,6 +364,20 @@ def find_radius(center, coord_center):
 
 
 def crop_ICAs(pinfo,case,points_LICA,points_RICA):
+    """
+    
+
+    Parameters
+    ----------
+    pinfo : str: ex 'pt7'
+    case : str, ex 'baseline'
+    points_LICA : numpy array, set of points of Left ICA
+    points_RICA : numpy array, set of points of right ICA
+
+    Returns
+    -------
+    Updated points_LICA and points_RICA, cropped (the value of the separation point is found inside the function)
+    """
     
     os.chdir('N:/vasospasm/' + pinfo + '/' + case+ '/1-geometry')
     
@@ -407,6 +445,19 @@ def calculate_norms(vectors):
 
 
 def find_number_of_steps(points_vessel, radius):
+    """
+    
+
+    Parameters
+    ----------
+    points_vessel :set of control points of the vessel
+    radius :radius of the intersecting vessel
+
+    Returns
+    -------
+    step_vessel : number of points that need to be removed
+
+    """
 
     # Convert the radius into the equivalent of steps in the vessel coordinates array
 
@@ -425,6 +476,22 @@ def find_number_of_steps(points_vessel, radius):
     return step_vessel
 
 def bifurcation_and_radius_remove(points_to_divide,points_bifurc,center_bifurc):
+    """
+    This function separate a set of points in two, at the bifurcation point. There is also a truncation
+    which is made, by removing the radius of the bifurcating vessel on each side.
+
+    Parameters
+    ----------
+    points_to_divide : set of points
+    points_bifurc : set of points of the intersecting vessel
+    center_bifurc : center and radius of the intersecting vessel, at the beginning and the end of the vessle
+
+    Returns
+    -------
+    points_1 : numpy array, result of the first separation at the bifurcation point
+    points_2 : numpy array, result of the first separation at the bifurcation point.
+
+    """
     
     nb_norms_start = []
     nb_norms_end = []
@@ -473,6 +540,23 @@ def bifurcation_and_radius_remove(points_to_divide,points_bifurc,center_bifurc):
 
 
 def bifurcation(points_to_divide,points_bifurc):
+    """
+    This function make the separation of a vessel with another vessel. There is no
+    truncation
+
+    Parameters
+    ----------
+    points_to_divide : numpy array, set of control points that need to be divided
+    points_bifurc : numpy array, set of control points of the vessel that bifurcate with the first set of points
+
+    Returns
+    -------
+    points_1 : first part of the divided set of points
+    points_2 : second part of the divided set of points
+    case_center : 1 if the end of the bifurcation vessel is in fact at the last point, 
+    2 if it is reversed and so the end of the vessel is at the first point.
+
+    """
     
     nb_norms_start = []
     nb_norms_end = []
@@ -506,6 +590,20 @@ def bifurcation(points_to_divide,points_bifurc):
 
 
 def bifurcation_one(points_to_divide,coord_bifurc):
+    """
+    
+
+    Parameters
+    ----------
+    points_to_divide :set of points to divide
+    coord_bifurc : coordinate of the point that is used to divide the set of points
+
+    Returns
+    -------
+    points_1 : first part of the set of points
+    points_2 : second part of the set of points
+
+    """
     
     nb_norms_start = []
    
@@ -522,15 +620,32 @@ def bifurcation_one(points_to_divide,coord_bifurc):
     points_1 = points_to_divide[:limin]
     points_2 = points_to_divide[limin:]
     
-    # if limin<len(nb_norms_end):
-    #     case_center=1
-    # else:
-    #     case_center=2
-    
 
     return points_1, points_2
 
 def remove_center(points_1,points_2,center_bifurc,case_center):
+    """
+    
+
+    Parameters
+    ----------
+    points_1 : TYPE
+        DESCRIPTION.
+    points_2 : TYPE
+        DESCRIPTION.
+    center_bifurc : TYPE
+        DESCRIPTION.
+    case_center : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    points_1 : TYPE
+        DESCRIPTION.
+    points_2 : TYPE
+        DESCRIPTION.
+
+    """
     
     if case_center==1:
         indice_1 = find_number_of_steps(
@@ -551,63 +666,6 @@ def remove_center(points_1,points_2,center_bifurc,case_center):
     points_2 = points_2[indice_2:]
     
     return points_1,points_2
-# Reflexion sur les zones de grand angle
-
-
-# L_dist_along= find_number_of_steps(dv,radius,17,7,3)
-
-
-# X=calculate_norms(dv.get('vectors{}'.format(7))[1])
-
-# x=np.asarray(L_dist_along)
-# R=np.linspace(2,4,X.shape[0])
-# # R=np.random.randint(2,4, X.shape[0])
-
-# #R=np.asarray([2,2.1,2.2,8,2.3,4,1,2.7,2.4,2.2])
-
-# p=0.7 # Constriction max pendant un vasospasm
-
-# R[7]=7
-# R[8]=6.5
-# R[9]=7.5
-# R[50]=p*R[50]
-# h=np.mean(X) # Définition du pas comme le
-
-
-# Ndiff=np.diff(R)/h  # Différence finie
-# #plt.plot(x,R)
-# plt.plot(x[:-1],Ndiff,label='variation of the radius')
-# plt.xlabel('distance along segment')
-# plt.ylabel('Variation of the radius')
-
-# R_mean=np.mean(R)
-# T_empty=np.ones((x.shape[0]-1,1))
-# droite_superieure=R_mean*(1-p)/h*T_empty
-# droite_inferieure=-R_mean*(1-p)/h*T_empty
-
-# plt.plot(x[:-1],droite_superieure,label='superior criteria')
-# plt.plot(x[:-1],droite_inferieure,label='inferior criteria')
-# plt.legend()
-# plt.show()
-# # Trouver un pic (Au dessus d'une certaine valeur définie à partir du max constrictino
-# # éliminer les points compris entre le début et la fin (Strictement)
-
-# # C'est à dire enlever les points max et min et ceu x entre les deux
-# Lindice_anomalie=[]
-# for i in range(Ndiff.shape[0]):
-#     if Ndiff[i]>R[i]*(1-p)/h:
-#         print("crit : ",R[i]*(1-p)/h)
-#         Lindice_anomalie.append(i)
-
-
-# for i in range(Ndiff.shape[0]):
-#     Ndiff[i]/
-
-# Idées pour la suite
-#   Prendre en compte la géometrie globlae (variations normales de rayon)
-#   L'algo ne doit pas se préocuper des variations liées aux vasospasmes. cb de % de constriction max?
-# Nb on supprime ici les dilatations donc ça devrait aller (enfin non parce que ça fait un pic de
-#        variation dans tous les cas)
 
 
 def get_center_radius(fname, pinfo, case):
@@ -668,10 +726,6 @@ def get_center_radius(fname, pinfo, case):
         dcenter["center{}".format(j)] = center, radius
 
     return dcenter
-
-
-# Essayer sur les données réelles de ICA
-
 
 def get_center_radius_ulti(fname, pinfo, case):
 
@@ -740,56 +794,3 @@ def get_center_radius_ulti(fname, pinfo, case):
     dcenter["center{}".format(2)] = center2, radius2
 
     return dcenter
-
-
-# import numpy as np
-# import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
-# from scipy.spatial import ConvexHull
-
-
-# def convex_hull():
-    
-
-# # 8 points defining the cube corners
-#     pts = np.array([[0, 0, 0], [0, 1, 0],
-#                  [1, 0, 1], [1, 1, 1], [2,1,0],[2,0,0]])
-
-#     hull = ConvexHull(pts)
-
-#     fig = plt.figure()
-#     ax = fig.add_subplot(111, projection="3d")
-
-# # Plot defining corner points
-#     ax.plot(pts.T[0], pts.T[1], pts.T[2], "ko")
-
-# # 12 = 2 * 6 faces are the simplices (2 simplices per square face)
-#     for s in hull.simplices:
-#         s = np.append(s, s[0])  # Here we cycle back to the first coordinate
-#         ax.plot(pts[s, 0], pts[s, 1], pts[s, 2], "r-")
-
-# # Make axis label
-#     for i in ["x", "y", "z"]:
-#         eval("ax.set_{:s}label('{:s}')".format(i, i))
-
-#     plt.show()
-
-
-# points = rng.random((30, 2))   # 30 random points in 2-D
-# from scipy.spatial import ConvexHull
-# one_revx = oneslice.T[:,0]/oneslice.T[:,2]
-# one_revy = oneslice.T[:,1]/oneslice.T[:,2]
-# one_rev = np.array([one_revx,one_revy]).T
-# hull = ConvexHull(one_rev,qhull_options='QJ Pp')
-# print(hull.area)
-
-
-# # plt.plot(points[:,0], points[:,1], 'o')
-# # for simplex in hull.simplices:
-# #     plt.plot(one_rev[simplex, 0], one_rev[simplex, 1],one_rev[simplex,2], 'k-')
-
-# fig = plt.figure(figsize=(7, 7))
-# plt.plot(one_rev[:,0], one_rev[:,1], 'o')
-# # for simplex in hull.simplices:
-#     ax.plot(one_rev[simplex, 0], one_rev[simplex, 1], one_rev[simplex,2],'k-')
-

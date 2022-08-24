@@ -3,18 +3,20 @@
 Created on Fri Aug 12 15:07:15 2022
 
 @author: GALADRIEL_GUEST
+
+This script is extracting datas from the .out file to get the flowrate in the vessels that are not in the outlet.
+the returning type is a dictionary of the values in each vessel concerned.
 """
 
-#numpy.loadtxt(fname, dtype=<class 'float'>, comments='#', delimiter=None, converters=None, skiprows=0, usecols=None, unpack=False, ndmin=0, encoding='bytes', max_rows=None, *, quotechar=None, like=None)[source]
+#%%Imports 
+
 import numpy as np
 import csv
 import os
 import glob
 import pandas as pd
 
-# np.loadata("N:/vasospasm/pt2/baseline/3-computational/hyak_submit/lp1.out")
-
-
+#%%Functions
 
 def get_list_files_dat2(pinfo, case, num_cycle):
     """
@@ -32,13 +34,13 @@ def get_list_files_dat2(pinfo, case, num_cycle):
     """
 
     num_cycle = str(num_cycle)
-    print('bien cette fonction')
+    # print('bien cette fonction')
     pathwd = "N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit"
-    mesh_size = "5"
-    list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
-    for files_dir in list_files_dir:
-        if "mesh_size_" + mesh_size in files_dir:
-            pathwd = pathwd + "/" + files_dir
+    # mesh_size = "5"
+    # list_files_dir = os.listdir("N:/vasospasm/" + pinfo + "/" + case + "/3-computational/hyak_submit")
+    # for files_dir in list_files_dir:
+    #     if "mesh_size_" + mesh_size in files_dir:
+    #         pathwd = pathwd + "/" + files_dir
     os.chdir(pathwd)
     onlyfiles = []
     print(os.getcwd())
@@ -54,6 +56,12 @@ def get_list_files_dat2(pinfo, case, num_cycle):
 
 
 def get_1_out(pinfo,case,num_cycle):
+    
+    """
+    Inputs : pinfo (str), case(str), num_cycle(the id of the cycle, usually 2)
+    returns a dictionary of the flowrate at the end of LA1,RA1,LP1 and RP1
+    
+    """
     
     onlyfiles,indices,pathwd = get_list_files_dat2(pinfo,case, num_cycle)
     time_limit = [float(x[9:])/1000 for x in indices[:-31]][-1]
@@ -92,6 +100,12 @@ def get_1_out(pinfo,case,num_cycle):
 
 
 def load_df(pinfo,case,num_cycle):
+    
+    """
+    Inputs : pinfo (str), case(str), num_cycle(the id of the cycle, usually 2)
+    returns a dictionary of the flowrate at the end of LA1,RA1,LP1 and RP1
+    
+    """
     
     onlyfiles,indices,pathwd = get_list_files_dat2(pinfo,case, num_cycle)
     print(indices)

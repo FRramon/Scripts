@@ -19,12 +19,7 @@ import os as os
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 import importlib
-
-
-
-
 import pickle
 
 #%% Import intern geometric module
